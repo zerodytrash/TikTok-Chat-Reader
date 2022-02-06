@@ -1,0 +1,21 @@
+body {
+    font-family:Arial, Helvetica, sans-serif;;
+}
+
+a {
+    color: #58a6ff;
+}
+
+h1 {
+    font-size: 1.8em;
+}
+
+.chat {
+    overflow-y: scroll;
+    max-height: calc(100vh - 230px);
+}
+
+.chat img {
+    height: 20px;
+    width: 20px;
+}

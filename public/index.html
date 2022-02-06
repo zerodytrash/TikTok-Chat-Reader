@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Chat</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script src="app.js"></script>
+</head>
+<body>
+    <h1>TikTok Chat Reader</h1>
+    <div>
+        A chat reader utilizing <a href="https://github.com/zerodytrash/TikTok-Livestream-Chat-Connector">TikTok-Livestream-Chat-Connector</a> and <a href="https://socket.io/">Socket.IO</a> to forward the data to the client.
+    </div>
+
+    <div class="inputFields">
+        <p>Enter the username of a user who is currently live:</p>
+        <input type="text" id="uniqueIdInput">
+        <input type="button" id="connectButton" value="connect">
+    </div>
+
+    <div class="state">
+        <pre id="stateText"></pre>
+    </div>
+
+    <div class="chat"></div>
+</body>
+</html>

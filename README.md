@@ -1,1 +1,1 @@
-# TikTok-Chat-Proxy
+# TikTok-Chat-Reader
