@@ -2,17 +2,28 @@ body {
     font-family:Arial, Helvetica, sans-serif;;
 }
 
+h1 {
+    font-size: 1.8em;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
 a {
     color: #58a6ff;
 }
 
-h1 {
-    font-size: 1.8em;
+.head {
+    margin-bottom: 15px;
+}
+
+.subTitle {
+    font-size: 0.8em;
+    font-weight: bold;
 }
 
 .chat {
     overflow-y: scroll;
-    max-height: calc(100vh - 230px);
+    max-height: calc(100vh - 235px);
 }
 
 .chat img {
