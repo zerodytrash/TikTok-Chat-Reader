@@ -14,6 +14,10 @@ function connect(uniqueId) {
     $('#stateText').text('Connecting...');
 }
 
+function sanitize(text) {
+    return text.replace(/</g, '&lt;')
+}
+
 function addChatItem(color, data, text) {
     if ($('.chat').find('div').length > 500) {
         $('.chat').find('div').slice(0, 200).remove();
@@ -24,7 +28,7 @@ function addChatItem(color, data, text) {
             <img src="${data.profilePictureUrl}">
             <span>
                 <b>${data.uniqueId}:</b> 
-                <span style="color:${color}">${text}</span>
+                <span style="color:${color}">${sanitize(text)}</span>
             </span>
         </div>
     `);
