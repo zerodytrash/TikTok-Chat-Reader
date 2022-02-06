@@ -18,13 +18,15 @@ function sanitize(text) {
     return text.replace(/</g, '&lt;')
 }
 
-function addChatItem(color, data, text) {
+function addChatItem(color, data, text, summarize) {
     if ($('.chat').find('div').length > 500) {
         $('.chat').find('div').slice(0, 200).remove();
     }
 
+    $('.chat').find('.temporary').remove();;
+    
     $('.chat').append(`
-        <div>
+        <div class=${summarize ? 'temporary' : 'static'}>
             <img src="${data.profilePictureUrl}">
             <span>
                 <b>${data.uniqueId}:</b> 
@@ -56,7 +58,7 @@ ioConnection.on('streamEnd', () => {
 
 // Chat events
 ioConnection.on('member', (msg) => {
-    addChatItem('#21b2c2', msg, 'joined');
+    addChatItem('#21b2c2', msg, 'joined', true);
 })
 
 ioConnection.on('chat', (msg) => {
