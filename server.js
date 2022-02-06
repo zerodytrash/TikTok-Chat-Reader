@@ -57,4 +57,4 @@ io.on('connection', (socket) => {
 // Server frontend files
 app.use(express.static('public'));
 
-httpServer.listen(8087);
+httpServer.listen(process.env.PORT || 80);
