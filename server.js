@@ -11,43 +11,58 @@ const io = new Server(httpServer, {
     }
 });
 
-let connectionCount = 0;
+let globalConnectionCount = 0;
 
 setInterval(() => {
-    io.emit('statistic', { connectionCount });
+    io.emit('statistic', { globalConnectionCount });
 }, 5000)
 
 
 io.on('connection', (socket) => {
     let chatConnection;
 
+    function disconnectChat() {
+        if (chatConnection) {
+            chatConnection.disconnect();
+            chatConnection = null;
+        }
+    }
+
     socket.on('setUniqueId', (uniqueId, options) => {
 
-        if (chatConnection) chatConnection.disconnect();
-        
-        chatConnection = new WebcastPushConnection(uniqueId, options);
-        chatConnection.connect().then(state => {
+        let thisConnection = new WebcastPushConnection(uniqueId, options);
+
+        thisConnection.connect().then(state => {
+            disconnectChat();
+            chatConnection = thisConnection;
+            if(!socket.connected) {
+                disconnectChat();
+                return;
+            }
             socket.emit('setUniqueIdSuccess', state);
         }).catch(err => {
             socket.emit('setUniqueIdFailed', err.toString());
         })
 
-        chatConnection.on('member', msg => socket.emit('member', Object.assign({}, msg)));
-        chatConnection.on('chat', msg => socket.emit('chat', Object.assign({}, msg)));
-        chatConnection.on('gift', msg => socket.emit('gift', Object.assign({}, msg)));
-        chatConnection.on('streamEnd', () => socket.emit('streamEnd'));
+        thisConnection.on('roomUser', msg => socket.emit('roomUser', msg));
+        thisConnection.on('member', msg => socket.emit('member', msg));
+        thisConnection.on('chat', msg => socket.emit('chat', msg));
+        thisConnection.on('gift', msg => socket.emit('gift', msg));
+        thisConnection.on('streamEnd', () => socket.emit('streamEnd'));
 
-        chatConnection.on('connected', () => {
-            connectionCount += 1;
+        thisConnection.on('connected', () => {
+            console.log("chatConnection connected");
+            globalConnectionCount += 1;
         });
 
-        chatConnection.on('disconnected', () => {
-            connectionCount -= 1;
+        thisConnection.on('disconnected', () => {
+            console.log("chatConnection disconnected");
+            globalConnectionCount -= 1;
         });
     })
 
-    socket.on('close', () => {
-        if (chatConnection) chatConnection.disconnect();
+    socket.on('disconnect', () => {
+        disconnectChat();
         console.log('client disconnected');
     })
 

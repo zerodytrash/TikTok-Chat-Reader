@@ -21,9 +21,14 @@ a {
     font-weight: bold;
 }
 
+#roomUserText {
+    width: 100%;
+    text-align: right;
+}
+
 .chat {
     overflow-y: scroll;
-    max-height: calc(100vh - 235px);
+    max-height: calc(100vh - 240px);
 }
 
 .chat img {

@@ -1,17 +1,22 @@
+let ioConnection = new io();
+
 $(document).ready(() => {
-    $('#connectButton').click(() => {
-        let uniqueId = $('#uniqueIdInput').val();
-        if (uniqueId !== '') {
-            connect(uniqueId);
-        } else {
-            alert('no username entered');
+    $('#connectButton').click(connect);
+    $('#uniqueIdInput').on('keyup', function (e) {
+        if (e.key === 'Enter') {
+            connect();
         }
     });
 })
 
-function connect(uniqueId) {
-    ioConnection.emit('setUniqueId', uniqueId);
-    $('#stateText').text('Connecting...');
+function connect() {
+    let uniqueId = $('#uniqueIdInput').val();
+    if (uniqueId !== '') {
+        ioConnection.emit('setUniqueId', uniqueId);
+        $('#stateText').text('Connecting...');
+    } else {
+        alert('no username entered');
+    }
 }
 
 function sanitize(text) {
@@ -24,7 +29,7 @@ function addChatItem(color, data, text, summarize) {
     }
 
     $('.chat').find('.temporary').remove();;
-    
+
     $('.chat').append(`
         <div class=${summarize ? 'temporary' : 'static'}>
             <img src="${data.profilePictureUrl}">
@@ -41,11 +46,9 @@ function addChatItem(color, data, text, summarize) {
     }, 800);
 }
 
-let ioConnection = new io();
-
 // Control events
 ioConnection.on('setUniqueIdSuccess', (state) => {
-    $('#stateText').text(`Connected with roomId ${state.roomId}`);
+    $('#stateText').text(`Connected to roomId ${state.roomId}`);
 })
 
 ioConnection.on('setUniqueIdFailed', (errorMessage) => {
@@ -54,6 +57,11 @@ ioConnection.on('setUniqueIdFailed', (errorMessage) => {
 
 ioConnection.on('streamEnd', () => {
     $('#stateText').text('Stream ended.');
+})
+
+// Room stats
+ioConnection.on('roomUser', (msg) => {
+    $('#roomUserText').html(`Viewers: <b>${msg.viewerCount.toLocaleString()}</b>`)
 })
 
 // Chat events

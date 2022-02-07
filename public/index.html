@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TikTok Chat</title>
+    <title>TikTok LIVE Chat Reader (Demo)</title>
 
     <link rel="stylesheet" href="style.css">
 
@@ -15,8 +15,8 @@
 </head>
 <body>
     <div class="head">
-        <h1>TikTok Chat Reader</h1>
-        <span class="subTitle"><a href="https://github.com/zerodytrash/TikTok-Chat-Reader">https://github.com/zerodytrash/TikTok-Chat-Reader</a></span>      
+        <h1>TikTok LIVE Chat Reader</h1>
+        <span class="subTitle">Source: <a href="https://github.com/zerodytrash/TikTok-Chat-Reader">https://github.com/zerodytrash/TikTok-Chat-Reader</a></span>      
     </div>
 
     <div>
@@ -24,13 +24,20 @@
     </div>
 
     <div class="inputFields">
-        <p>Enter the @username of a user who is currently live:</p>
+        <p>Enter the <b>@username</b> of a user who is currently live:</p>
         <input type="text" id="uniqueIdInput">
         <input type="button" id="connectButton" value="connect">
     </div>
 
     <div class="state">
-        <pre id="stateText"></pre>
+        <table>
+            <tr>
+                <td>
+                    <pre id="stateText"></pre>
+                </td>
+                <td id="roomUserText"></td>
+            </tr>
+        </table>
     </div>
 
     <div class="chat"></div>
