@@ -29,17 +29,26 @@
         <input type="button" id="connectButton" value="connect">
     </div>
 
-    <div class="state">
-        <table>
-            <tr>
-                <td>
-                    <pre id="stateText"></pre>
-                </td>
-                <td id="roomUserText"></td>
-            </tr>
-        </table>
-    </div>
+    <table class="splitstatetable">
+        <tr>
+            <td>
+                <pre id="stateText"></pre>
+            </td>
+            <td>
+                <div id="roomStats"></div>
+            </td>
+        </tr>
+    </table>
 
-    <div class="chat"></div>
+    <table class="splitchattable">
+        <tr>
+            <td>
+                <div class="chatcontainer"></div>
+            </td>
+            <td>
+                <div class="giftcontainer"></div>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>

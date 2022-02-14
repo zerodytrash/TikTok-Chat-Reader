@@ -35,7 +35,7 @@ io.on('connection', (socket) => {
         thisConnection.connect().then(state => {
             disconnectChat();
             chatConnection = thisConnection;
-            if(!socket.connected) {
+            if (!socket.connected) {
                 disconnectChat();
                 return;
             }
@@ -48,6 +48,8 @@ io.on('connection', (socket) => {
         thisConnection.on('member', msg => socket.emit('member', msg));
         thisConnection.on('chat', msg => socket.emit('chat', msg));
         thisConnection.on('gift', msg => socket.emit('gift', msg));
+        thisConnection.on('social', msg => socket.emit('social', msg));
+        thisConnection.on('like', msg => socket.emit('like', msg));
         thisConnection.on('streamEnd', () => socket.emit('streamEnd'));
 
         thisConnection.on('connected', () => {

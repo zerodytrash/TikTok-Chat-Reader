@@ -1,5 +1,6 @@
 body {
-    font-family:Arial, Helvetica, sans-serif;;
+    font-family:Arial, Helvetica, sans-serif;
+    min-width: 700px;
 }
 
 h1 {
@@ -21,17 +22,55 @@ a {
     font-weight: bold;
 }
 
+.usernamelink {
+    color: #18508f;
+    text-decoration: none;
+}
+
 #roomUserText {
     width: 100%;
     text-align: right;
 }
 
-.chat {
-    overflow-y: scroll;
-    max-height: calc(100vh - 240px);
+#roomStats {
+    width: 100%;
+    text-align: right;
 }
 
-.chat img {
+#roomStats b {
+    margin-right: 20px;
+}
+
+.splitchattable, .splitstatetable {
+    width: 100%;
+}
+
+.splitstatetable td {
+    width: 50%;
+}
+
+.chatcontainer, .giftcontainer {
+    overflow-y: scroll;
+    height: calc(100vh - 240px);
+    word-wrap: break-word;
+}
+
+.chatcontainer {
+    min-width: 400px;
+    max-width: calc(100vw - 330px);
+}
+
+.giftcontainer {
+    min-width: 300px;
+}
+
+.miniprofilepicture {
     height: 20px;
     width: 20px;
+}
+
+.gifticon {
+    height: 50px;
+    width: 50px;
+    margin-right: 10px;
 }

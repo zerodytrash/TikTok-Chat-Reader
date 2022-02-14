@@ -1,5 +1,9 @@
 let ioConnection = new io();
 
+let viewerCount = 0;
+let likeCount = 0;
+let diamondsCount = 0;
+
 $(document).ready(() => {
     $('#connectButton').click(connect);
     $('#uniqueIdInput').on('keyup', function (e) {
@@ -12,7 +16,9 @@ $(document).ready(() => {
 function connect() {
     let uniqueId = $('#uniqueIdInput').val();
     if (uniqueId !== '') {
-        ioConnection.emit('setUniqueId', uniqueId);
+        ioConnection.emit('setUniqueId', uniqueId, {
+            enableExtendedGiftInfo: true
+        });
         $('#stateText').text('Connecting...');
     } else {
         alert('no username entered');
@@ -23,31 +29,76 @@ function sanitize(text) {
     return text.replace(/</g, '&lt;')
 }
 
+function updateRoomStats() {
+    $('#roomStats').html(`Viewers: <b>${viewerCount.toLocaleString()}</b> Likes: <b>${likeCount.toLocaleString()}</b> Earned Diamonds: <b>${diamondsCount.toLocaleString()}</b>`)
+}
+
+function generateUsernameLink(data) {
+    return `<a class="usernamelink" href="https://www.tiktok.com/@${data.uniqueId}" target="_blank">${data.uniqueId}</a>`;
+}
+
 function addChatItem(color, data, text, summarize) {
-    if ($('.chat').find('div').length > 500) {
-        $('.chat').find('div').slice(0, 200).remove();
+    if ($('.chatcontainer').find('div').length > 500) {
+        $('.chatcontainer').find('div').slice(0, 200).remove();
     }
 
-    $('.chat').find('.temporary').remove();;
+    $('.chatcontainer').find('.temporary').remove();;
 
-    $('.chat').append(`
+    $('.chatcontainer').append(`
         <div class=${summarize ? 'temporary' : 'static'}>
-            <img src="${data.profilePictureUrl}">
+            <img class="miniprofilepicture" src="${data.profilePictureUrl}">
             <span>
-                <b>${data.uniqueId}:</b> 
+                <b>${generateUsernameLink(data)}:</b> 
                 <span style="color:${color}">${sanitize(text)}</span>
             </span>
         </div>
     `);
 
-    $(".chat").stop();
-    $(".chat").animate({
-        scrollTop: $('.chat')[0].scrollHeight
+    $(".chatcontainer").stop();
+    $(".chatcontainer").animate({
+        scrollTop: $('.chatcontainer')[0].scrollHeight
+    }, 800);
+}
+
+function addGiftItem(data) {
+    if ($('.giftcontainer').find('div').length > 500) {
+        $('.giftcontainer').find('div').slice(0, 200).remove();
+    }
+
+    $('.giftcontainer').append(`
+        <div>
+            <img class="miniprofilepicture" src="${data.profilePictureUrl}">
+            <span>
+                <b>${generateUsernameLink(data)}:</b> <span>${data.extendedGiftInfo.describe}</span><br>
+                <div>
+                    <table>
+                        <tr>
+                            <td><img class="gifticon" src="${(data.extendedGiftInfo.icon || data.extendedGiftInfo.image).url_list[0]}"></td>
+                            <td>
+                                <span>Name: <b>${data.extendedGiftInfo.name}</b> (ID:${data.giftId})<span><br>
+                                <span>Repeat: <b>${data.gift.repeat_count.toLocaleString()}x</b><span><br>
+                                <span>Cost: <b>${data.extendedGiftInfo.diamond_count.toLocaleString()} Diamonds</b><span>
+                            </td>
+                        </tr>
+                    </tabl>
+                </div>
+            </span>
+        </div>
+    `);
+
+    $(".giftcontainer").stop();
+    $(".giftcontainer").animate({
+        scrollTop: $('.giftcontainer')[0].scrollHeight
     }, 800);
 }
 
 // Control events
 ioConnection.on('setUniqueIdSuccess', (state) => {
+    // reset stats
+    viewerCount = 0;
+    likeCount = 0;
+    diamondsCount = 0;
+    updateRoomStats();
     $('#stateText').text(`Connected to roomId ${state.roomId}`);
 })
 
@@ -59,20 +110,51 @@ ioConnection.on('streamEnd', () => {
     $('#stateText').text('Stream ended.');
 })
 
-// Room stats
+// viewer stats
 ioConnection.on('roomUser', (msg) => {
-    $('#roomUserText').html(`Viewers: <b>${msg.viewerCount.toLocaleString()}</b>`)
+    if (typeof msg.viewerCount === 'number') {
+        viewerCount = msg.viewerCount;
+        updateRoomStats();
+    }
 })
 
-// Chat events
+// like stats
+ioConnection.on('like', (msg) => {
+    if (typeof msg.totalLikeCount === 'number') {
+        likeCount = msg.totalLikeCount;
+        updateRoomStats();
+    }
+})
+
+// Chat events,
+let joinMsgDelay = 0;
 ioConnection.on('member', (msg) => {
-    addChatItem('#21b2c2', msg, 'joined', true);
+    let addDelay = 250;
+    if (joinMsgDelay > 500) addDelay = 100;
+    if (joinMsgDelay > 1000) addDelay = 0;
+
+    joinMsgDelay += addDelay;
+
+    setTimeout(() => {
+        joinMsgDelay -= addDelay;
+        addChatItem('#21b2c2', msg, 'joined', true);
+    }, joinMsgDelay);
 })
 
 ioConnection.on('chat', (msg) => {
     addChatItem('', msg, msg.comment);
 })
 
-ioConnection.on('gift', (msg) => {
-    addChatItem('#c2a821', msg, `Gifted giftId=${msg.giftId}`);
+ioConnection.on('gift', (data) => {
+    addGiftItem(data);
+    if (data.extendedGiftInfo.diamond_count) {
+        diamondsCount += data.extendedGiftInfo.diamond_count;
+        updateRoomStats();
+    }
+})
+
+// share, follow
+ioConnection.on('social', (data) => {
+    let color = data.displayType.includes('follow') ? '#ff005e' : '#2fb816';
+    addChatItem(color, data, data.label.replace('{0:user}', ''));
 })
