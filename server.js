@@ -61,6 +61,10 @@ io.on('connection', (socket) => {
             console.log("chatConnection disconnected");
             globalConnectionCount -= 1;
         });
+
+        thisConnection.on('error', (err) => {
+            console.error(err);
+        });
     })
 
     socket.on('disconnect', () => {

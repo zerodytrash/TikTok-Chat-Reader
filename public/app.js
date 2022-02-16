@@ -37,14 +37,20 @@ function generateUsernameLink(data) {
     return `<a class="usernamelink" href="https://www.tiktok.com/@${data.uniqueId}" target="_blank">${data.uniqueId}</a>`;
 }
 
+function isPendingStreak(data) {
+    return data.gift.gift_type === 1 && data.gift.repeat_end === 0;
+}
+
 function addChatItem(color, data, text, summarize) {
-    if ($('.chatcontainer').find('div').length > 500) {
-        $('.chatcontainer').find('div').slice(0, 200).remove();
+    let container = $('.chatcontainer');
+
+    if (container.find('div').length > 500) {
+        container.find('div').slice(0, 200).remove();
     }
 
-    $('.chatcontainer').find('.temporary').remove();;
+    container.find('.temporary').remove();;
 
-    $('.chatcontainer').append(`
+    container.append(`
         <div class=${summarize ? 'temporary' : 'static'}>
             <img class="miniprofilepicture" src="${data.profilePictureUrl}">
             <span>
@@ -54,19 +60,23 @@ function addChatItem(color, data, text, summarize) {
         </div>
     `);
 
-    $(".chatcontainer").stop();
-    $(".chatcontainer").animate({
-        scrollTop: $('.chatcontainer')[0].scrollHeight
-    }, 800);
+    container.stop();
+    container.animate({
+        scrollTop: container[0].scrollHeight
+    }, 400);
 }
 
 function addGiftItem(data) {
-    if ($('.giftcontainer').find('div').length > 500) {
-        $('.giftcontainer').find('div').slice(0, 200).remove();
+    let container = $('.giftcontainer');
+
+    if (container.find('div').length > 200) {
+        container.find('div').slice(0, 100).remove();
     }
 
-    $('.giftcontainer').append(`
-        <div>
+    let streakId = data.userId.toString() + '_' + data.giftId;
+
+    let html = `
+        <div data-streakid=${isPendingStreak(data) ? streakId : ''}>
             <img class="miniprofilepicture" src="${data.profilePictureUrl}">
             <span>
                 <b>${generateUsernameLink(data)}:</b> <span>${data.extendedGiftInfo.describe}</span><br>
@@ -76,19 +86,27 @@ function addGiftItem(data) {
                             <td><img class="gifticon" src="${(data.extendedGiftInfo.icon || data.extendedGiftInfo.image).url_list[0]}"></td>
                             <td>
                                 <span>Name: <b>${data.extendedGiftInfo.name}</b> (ID:${data.giftId})<span><br>
-                                <span>Repeat: <b>${data.gift.repeat_count.toLocaleString()}x</b><span><br>
-                                <span>Cost: <b>${data.extendedGiftInfo.diamond_count.toLocaleString()} Diamonds</b><span>
+                                <span>Repeat: <b style="${isPendingStreak(data) ? 'color:red' : ''}">x${data.gift.repeat_count.toLocaleString()}</b><span><br>
+                                <span>Cost: <b>${(data.extendedGiftInfo.diamond_count * data.gift.repeat_count).toLocaleString()} Diamonds</b><span>
                             </td>
                         </tr>
                     </tabl>
                 </div>
             </span>
         </div>
-    `);
+    `;
 
-    $(".giftcontainer").stop();
-    $(".giftcontainer").animate({
-        scrollTop: $('.giftcontainer')[0].scrollHeight
+    let existingStreakItem = container.find(`[data-streakid='${streakId}']`);
+
+    if (existingStreakItem.length) {
+        existingStreakItem.replaceWith(html);
+    } else {
+        container.append(html);
+    }
+
+    container.stop();
+    container.animate({
+        scrollTop: container[0].scrollHeight
     }, 800);
 }
 
@@ -147,8 +165,9 @@ ioConnection.on('chat', (msg) => {
 
 ioConnection.on('gift', (data) => {
     addGiftItem(data);
-    if (data.extendedGiftInfo.diamond_count) {
-        diamondsCount += data.extendedGiftInfo.diamond_count;
+
+    if (!isPendingStreak(data) && data.extendedGiftInfo.diamond_count > 0) {
+        diamondsCount += (data.extendedGiftInfo.diamond_count * data.gift.repeat_count);
         updateRoomStats();
     }
 })

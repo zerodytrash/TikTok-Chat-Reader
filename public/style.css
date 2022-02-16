@@ -1,6 +1,6 @@
 body {
     font-family:Arial, Helvetica, sans-serif;
-    min-width: 700px;
+    min-width: 800px;
 }
 
 h1 {
@@ -49,6 +49,10 @@ a {
     width: 50%;
 }
 
+.containerheader {
+    text-align: center;
+}
+
 .chatcontainer, .giftcontainer {
     overflow-y: scroll;
     height: calc(100vh - 240px);
@@ -57,11 +61,11 @@ a {
 
 .chatcontainer {
     min-width: 400px;
-    max-width: calc(100vw - 330px);
+    max-width: calc(100vw - 430px);
 }
 
 .giftcontainer {
-    min-width: 300px;
+    min-width: 400px;
 }
 
 .miniprofilepicture {
