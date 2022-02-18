@@ -138,6 +138,10 @@ ioConnection.on('roomUser', (msg) => {
 
 // like stats
 ioConnection.on('like', (msg) => {
+    if (typeof msg.likeCount === 'number') {
+        addChatItem('#447dd4', msg, msg.label.replace('{0:user}', '').replace('likes', `${msg.likeCount} likes`))
+    }
+
     if (typeof msg.totalLikeCount === 'number') {
         likeCount = msg.totalLikeCount;
         updateRoomStats();
