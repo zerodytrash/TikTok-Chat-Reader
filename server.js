@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
@@ -29,6 +31,8 @@ io.on('connection', (socket) => {
     }
 
     socket.on('setUniqueId', (uniqueId, options) => {
+
+        console.log('connecting', uniqueId, options);
 
         let thisConnection = new WebcastPushConnection(uniqueId, options);
 
