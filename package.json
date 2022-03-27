@@ -3,6 +3,6 @@
     "dotenv": "^16.0.0",
     "express": "^4.17.2",
     "socket.io": "^4.4.1",
-    "tiktok-livestream-chat-connector": "^0.9.13"
+    "tiktok-livestream-chat-connector": "^0.9.15"
   }
 }
