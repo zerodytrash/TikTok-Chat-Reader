@@ -3,7 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
-const { WebcastPushConnection } = require('tiktok-livestream-chat-connector');
+const { WebcastPushConnection } = require('tiktok-live-connector');
 
 const app = express();
 const httpServer = createServer(app);
@@ -82,4 +82,8 @@ io.on('connection', (socket) => {
 // Server frontend files
 app.use(express.static('public'));
 
-httpServer.listen(process.env.PORT || 80);
+const port = process.env.PORT || 8081;
+
+httpServer.listen(port);
+
+console.info(`Server running! Please visit http://localhost:${port}`);
