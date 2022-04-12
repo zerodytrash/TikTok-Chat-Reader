@@ -1,5 +1,6 @@
-let ioConnection = new io();
+let socket = new io();
 
+let currentUniqueId;
 let viewerCount = 0;
 let likeCount = 0;
 let diamondsCount = 0;
@@ -13,17 +14,34 @@ $(document).ready(() => {
     });
 })
 
+function setUniqueId() {
+    socket.emit('setUniqueId', currentUniqueId, {
+        enableExtendedGiftInfo: true
+    });
+}
+
 function connect() {
     let uniqueId = $('#uniqueIdInput').val();
     if (uniqueId !== '') {
-        ioConnection.emit('setUniqueId', uniqueId, {
-            enableExtendedGiftInfo: true
-        });
+        currentUniqueId = uniqueId;
+        setUniqueId();
         $('#stateText').text('Connecting...');
     } else {
         alert('no username entered');
     }
 }
+
+socket.on('disconnect', () => {
+    console.warn("Socket disconnected!");
+})
+
+socket.on('connect', () => {
+    console.info("Socket connected!");
+    // Reconnted and uniqueId already defined? => Emit again
+    if(currentUniqueId) {
+        setUniqueId();
+    }
+})
 
 function sanitize(text) {
     return text.replace(/</g, '&lt;')
@@ -38,7 +56,7 @@ function generateUsernameLink(data) {
 }
 
 function isPendingStreak(data) {
-    return data.gift.gift_type === 1 && data.gift.repeat_end === 0;
+    return data.giftType === 1 && !data.repeatEnd;
 }
 
 function addChatItem(color, data, text, summarize) {
@@ -79,15 +97,15 @@ function addGiftItem(data) {
         <div data-streakid=${isPendingStreak(data) ? streakId : ''}>
             <img class="miniprofilepicture" src="${data.profilePictureUrl}">
             <span>
-                <b>${generateUsernameLink(data)}:</b> <span>${data.extendedGiftInfo.describe}</span><br>
+                <b>${generateUsernameLink(data)}:</b> <span>${data.describe}</span><br>
                 <div>
                     <table>
                         <tr>
-                            <td><img class="gifticon" src="${(data.extendedGiftInfo.icon || data.extendedGiftInfo.image).url_list[0]}"></td>
+                            <td><img class="gifticon" src="${data.giftPictureUrl}"></td>
                             <td>
-                                <span>Name: <b>${data.extendedGiftInfo.name}</b> (ID:${data.giftId})<span><br>
-                                <span>Repeat: <b style="${isPendingStreak(data) ? 'color:red' : ''}">x${data.gift.repeat_count.toLocaleString()}</b><span><br>
-                                <span>Cost: <b>${(data.extendedGiftInfo.diamond_count * data.gift.repeat_count).toLocaleString()} Diamonds</b><span>
+                                <span>Name: <b>${data.giftName}</b> (ID:${data.giftId})<span><br>
+                                <span>Repeat: <b style="${isPendingStreak(data) ? 'color:red' : ''}">x${data.repeatCount.toLocaleString()}</b><span><br>
+                                <span>Cost: <b>${(data.diamondCount * data.repeatCount).toLocaleString()} Diamonds</b><span>
                             </td>
                         </tr>
                     </tabl>
@@ -111,7 +129,7 @@ function addGiftItem(data) {
 }
 
 // Control events
-ioConnection.on('setUniqueIdSuccess', (state) => {
+socket.on('tiktokConnected', (state) => {
     // reset stats
     viewerCount = 0;
     likeCount = 0;
@@ -120,16 +138,16 @@ ioConnection.on('setUniqueIdSuccess', (state) => {
     $('#stateText').text(`Connected to roomId ${state.roomId}`);
 })
 
-ioConnection.on('setUniqueIdFailed', (errorMessage) => {
+socket.on('tiktokDisconnected', (errorMessage) => {
     $('#stateText').text(errorMessage);
 })
 
-ioConnection.on('streamEnd', () => {
+socket.on('streamEnd', () => {
     $('#stateText').text('Stream ended.');
 })
 
 // viewer stats
-ioConnection.on('roomUser', (msg) => {
+socket.on('roomUser', (msg) => {
     if (typeof msg.viewerCount === 'number') {
         viewerCount = msg.viewerCount;
         updateRoomStats();
@@ -137,7 +155,7 @@ ioConnection.on('roomUser', (msg) => {
 })
 
 // like stats
-ioConnection.on('like', (msg) => {
+socket.on('like', (msg) => {
     if (typeof msg.likeCount === 'number') {
         addChatItem('#447dd4', msg, msg.label.replace('{0:user}', '').replace('likes', `${msg.likeCount} likes`))
     }
@@ -150,7 +168,7 @@ ioConnection.on('like', (msg) => {
 
 // Chat events,
 let joinMsgDelay = 0;
-ioConnection.on('member', (msg) => {
+socket.on('member', (msg) => {
     let addDelay = 250;
     if (joinMsgDelay > 500) addDelay = 100;
     if (joinMsgDelay > 1000) addDelay = 0;
@@ -163,21 +181,21 @@ ioConnection.on('member', (msg) => {
     }, joinMsgDelay);
 })
 
-ioConnection.on('chat', (msg) => {
+socket.on('chat', (msg) => {
     addChatItem('', msg, msg.comment);
 })
 
-ioConnection.on('gift', (data) => {
+socket.on('gift', (data) => {
     addGiftItem(data);
 
-    if (!isPendingStreak(data) && data.extendedGiftInfo.diamond_count > 0) {
-        diamondsCount += (data.extendedGiftInfo.diamond_count * data.gift.repeat_count);
+    if (!isPendingStreak(data) && data.diamondCount > 0) {
+        diamondsCount += (data.diamondCount * data.repeatCount);
         updateRoomStats();
     }
 })
 
 // share, follow
-ioConnection.on('social', (data) => {
+socket.on('social', (data) => {
     let color = data.displayType.includes('follow') ? '#ff005e' : '#2fb816';
     addChatItem(color, data, data.label.replace('{0:user}', ''));
 })

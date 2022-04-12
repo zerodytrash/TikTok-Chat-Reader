@@ -3,87 +3,79 @@ require('dotenv').config();
 const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
-const { WebcastPushConnection } = require('tiktok-live-connector');
+const { TikTokConnectionWrapper, getGlobalConnectionCount } = require('./connectionWrapper');
 
 const app = express();
 const httpServer = createServer(app);
+
+// Enable cross origin resource sharing
 const io = new Server(httpServer, {
     cors: {
         origin: '*'
     }
 });
 
-let globalConnectionCount = 0;
-
-setInterval(() => {
-    io.emit('statistic', { globalConnectionCount });
-}, 5000)
-
-
 io.on('connection', (socket) => {
-    let chatConnection;
-
-    function disconnectChat() {
-        if (chatConnection) {
-            chatConnection.disconnect();
-            chatConnection = null;
-        }
-    }
+    let tiktokConnectionWrapper;
 
     socket.on('setUniqueId', (uniqueId, options) => {
 
-        console.log('connecting', uniqueId, options);
+        // Prohibit the client from specifying these options (for security reasons)
+        if (typeof options === 'object') {
+            delete options.requestOptions;
+            delete options.websocketOptions;
+        }
 
-        let thisConnection = new WebcastPushConnection(uniqueId, options);
+        // Is the client already connected to a stream? => Disconnect
+        if (tiktokConnectionWrapper) {
+            tiktokConnectionWrapper.disconnect();
+        }
 
-        thisConnection.connect().then(state => {
-            disconnectChat();
-            chatConnection = thisConnection;
-            if (!socket.connected) {
-                disconnectChat();
-                return;
-            }
-            socket.emit('setUniqueIdSuccess', state);
-        }).catch(err => {
-            socket.emit('setUniqueIdFailed', err.toString());
-        })
+        // Connect to the given username (uniqueId)
+        try {
+            tiktokConnectionWrapper = new TikTokConnectionWrapper(uniqueId, options, true);
+            tiktokConnectionWrapper.connect();            
+        } catch(err) {
+            socket.emit('disconnected', err.toString());
+            return;
+        }
 
-        thisConnection.on('roomUser', msg => socket.emit('roomUser', msg));
-        thisConnection.on('member', msg => socket.emit('member', msg));
-        thisConnection.on('chat', msg => socket.emit('chat', msg));
-        thisConnection.on('gift', msg => socket.emit('gift', msg));
-        thisConnection.on('social', msg => socket.emit('social', msg));
-        thisConnection.on('like', msg => socket.emit('like', msg));
-        thisConnection.on('streamEnd', () => socket.emit('streamEnd'));
+        // Redirect wrapper control events once
+        tiktokConnectionWrapper.once('connected', state => socket.emit('tiktokConnected', state));
+        tiktokConnectionWrapper.once('disconnected', reason => socket.emit('tiktokDisconnected', reason));
 
-        thisConnection.on('connected', () => {
-            console.log("chatConnection connected");
-            globalConnectionCount += 1;
-        });
+        // Notify client when stream ends
+        tiktokConnectionWrapper.connection.on('streamEnd', () => socket.emit('streamEnd'));
 
-        thisConnection.on('disconnected', () => {
-            console.log("chatConnection disconnected");
-            globalConnectionCount -= 1;
-        });
-
-        thisConnection.on('error', (err) => {
-            console.error(err);
-        });
-    })
+        // Redirect message events
+        tiktokConnectionWrapper.connection.on('roomUser', msg => socket.emit('roomUser', msg));
+        tiktokConnectionWrapper.connection.on('member', msg => socket.emit('member', msg));
+        tiktokConnectionWrapper.connection.on('chat', msg => socket.emit('chat', msg));
+        tiktokConnectionWrapper.connection.on('gift', msg => socket.emit('gift', msg));
+        tiktokConnectionWrapper.connection.on('social', msg => socket.emit('social', msg));
+        tiktokConnectionWrapper.connection.on('like', msg => socket.emit('like', msg));
+        tiktokConnectionWrapper.connection.on('questionNew', msg => socket.emit('questionNew', msg));
+        tiktokConnectionWrapper.connection.on('linkMicBattle', msg => socket.emit('linkMicBattle', msg));
+        tiktokConnectionWrapper.connection.on('linkMicArmies', msg => socket.emit('linkMicArmies', msg));
+        tiktokConnectionWrapper.connection.on('liveIntro', msg => socket.emit('liveIntro', msg));
+    });
 
     socket.on('disconnect', () => {
-        disconnectChat();
-        console.log('client disconnected');
-    })
-
-    console.log('client connected');
+        if(tiktokConnectionWrapper) {
+            tiktokConnectionWrapper.disconnect();
+        }
+    });
 });
 
-// Server frontend files
+// Emit global connection statistics
+setInterval(() => {
+    io.emit('statistic', { globalConnectionCount: getGlobalConnectionCount() });
+}, 5000)
+
+// Serve frontend files
 app.use(express.static('public'));
 
+// Start http listener
 const port = process.env.PORT || 8081;
-
 httpServer.listen(port);
-
 console.info(`Server running! Please visit http://localhost:${port}`);
