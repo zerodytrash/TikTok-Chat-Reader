@@ -1,6 +1,8 @@
-let socket = new io();
+// This will use the demo backend if you open index.html locally via file://, otherwise your server will be used
+let backendUrl = location.protocol === 'file:' ? "https://tiktok-chat-reader.zerody.one/" : undefined;
+let connection = new TikTokIOConnection(backendUrl);
 
-let currentUniqueId;
+// Counter
 let viewerCount = 0;
 let likeCount = 0;
 let diamondsCount = 0;
@@ -14,35 +16,33 @@ $(document).ready(() => {
     });
 })
 
-function setUniqueId() {
-    socket.emit('setUniqueId', currentUniqueId, {
-        enableExtendedGiftInfo: true
-    });
-}
-
 function connect() {
     let uniqueId = $('#uniqueIdInput').val();
     if (uniqueId !== '') {
-        currentUniqueId = uniqueId;
-        setUniqueId();
+
         $('#stateText').text('Connecting...');
+
+        connection.connect(uniqueId, {
+            enableExtendedGiftInfo: true
+        }).then(state => {
+            $('#stateText').text(`Connected to roomId ${state.roomId}`);
+
+            // reset stats
+            viewerCount = 0;
+            likeCount = 0;
+            diamondsCount = 0;
+            updateRoomStats();
+
+        }).catch(errorMessage => {
+            $('#stateText').text(errorMessage);
+        })
+
     } else {
         alert('no username entered');
     }
 }
 
-socket.on('disconnect', () => {
-    console.warn("Socket disconnected!");
-})
-
-socket.on('connect', () => {
-    console.info("Socket connected!");
-    // Reconnted and uniqueId already defined? => Emit again
-    if(currentUniqueId) {
-        setUniqueId();
-    }
-})
-
+// Prevent Cross site scripting (XSS)
 function sanitize(text) {
     return text.replace(/</g, '&lt;')
 }
@@ -59,6 +59,9 @@ function isPendingStreak(data) {
     return data.giftType === 1 && !data.repeatEnd;
 }
 
+/**
+ * Add a new message to the chat container
+ */
 function addChatItem(color, data, text, summarize) {
     let container = $('.chatcontainer');
 
@@ -84,6 +87,9 @@ function addChatItem(color, data, text, summarize) {
     }, 400);
 }
 
+/**
+ * Add a new gift to the gift container
+ */
 function addGiftItem(data) {
     let container = $('.giftcontainer');
 
@@ -128,26 +134,9 @@ function addGiftItem(data) {
     }, 800);
 }
 
-// Control events
-socket.on('tiktokConnected', (state) => {
-    // reset stats
-    viewerCount = 0;
-    likeCount = 0;
-    diamondsCount = 0;
-    updateRoomStats();
-    $('#stateText').text(`Connected to roomId ${state.roomId}`);
-})
-
-socket.on('tiktokDisconnected', (errorMessage) => {
-    $('#stateText').text(errorMessage);
-})
-
-socket.on('streamEnd', () => {
-    $('#stateText').text('Stream ended.');
-})
 
 // viewer stats
-socket.on('roomUser', (msg) => {
+connection.on('roomUser', (msg) => {
     if (typeof msg.viewerCount === 'number') {
         viewerCount = msg.viewerCount;
         updateRoomStats();
@@ -155,7 +144,7 @@ socket.on('roomUser', (msg) => {
 })
 
 // like stats
-socket.on('like', (msg) => {
+connection.on('like', (msg) => {
     if (typeof msg.likeCount === 'number') {
         addChatItem('#447dd4', msg, msg.label.replace('{0:user}', '').replace('likes', `${msg.likeCount} likes`))
     }
@@ -166,9 +155,9 @@ socket.on('like', (msg) => {
     }
 })
 
-// Chat events,
+// Member join
 let joinMsgDelay = 0;
-socket.on('member', (msg) => {
+connection.on('member', (msg) => {
     let addDelay = 250;
     if (joinMsgDelay > 500) addDelay = 100;
     if (joinMsgDelay > 1000) addDelay = 0;
@@ -181,11 +170,13 @@ socket.on('member', (msg) => {
     }, joinMsgDelay);
 })
 
-socket.on('chat', (msg) => {
+// New chat comment received
+connection.on('chat', (msg) => {
     addChatItem('', msg, msg.comment);
 })
 
-socket.on('gift', (data) => {
+// New gift received
+connection.on('gift', (data) => {
     addGiftItem(data);
 
     if (!isPendingStreak(data) && data.diamondCount > 0) {
@@ -195,7 +186,11 @@ socket.on('gift', (data) => {
 })
 
 // share, follow
-socket.on('social', (data) => {
+connection.on('social', (data) => {
     let color = data.displayType.includes('follow') ? '#ff005e' : '#2fb816';
     addChatItem(color, data, data.label.replace('{0:user}', ''));
+})
+
+connection.on('streamEnd', () => {
+    $('#stateText').text('Stream ended.');
 })
