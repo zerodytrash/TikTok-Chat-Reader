@@ -20,7 +20,7 @@ class TikTokIOConnection {
         this.socket.on('disconnect', () => {
             console.warn("Socket disconnected!");
         })
-        
+
         this.socket.on('streamEnd', () => {
             console.warn("LIVE has ended!");
             this.uniqueId = null;
@@ -32,6 +32,13 @@ class TikTokIOConnection {
         this.options = options || {};
 
         this.setUniqueId();
+
+        this.socket.on('tiktokDisconnected', (errMsg) => {
+            console.warn(errMsg);
+            if (errMsg && errMsg.includes('LIVE has ended')) {
+                this.uniqueId = null;
+            }
+        });
 
         return new Promise((resolve, reject) => {
             this.socket.once('tiktokConnected', resolve);
