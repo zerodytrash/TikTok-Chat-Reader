@@ -25,13 +25,6 @@ class TikTokIOConnection {
             console.warn("LIVE has ended!");
             this.uniqueId = null;
         })
-    }
-
-    connect(uniqueId, options) {
-        this.uniqueId = uniqueId;
-        this.options = options || {};
-
-        this.setUniqueId();
 
         this.socket.on('tiktokDisconnected', (errMsg) => {
             console.warn(errMsg);
@@ -39,6 +32,13 @@ class TikTokIOConnection {
                 this.uniqueId = null;
             }
         });
+    }
+
+    connect(uniqueId, options) {
+        this.uniqueId = uniqueId;
+        this.options = options || {};
+
+        this.setUniqueId();
 
         return new Promise((resolve, reject) => {
             this.socket.once('tiktokConnected', resolve);
