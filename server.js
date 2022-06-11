@@ -58,6 +58,8 @@ io.on('connection', (socket) => {
         tiktokConnectionWrapper.connection.on('linkMicBattle', msg => socket.emit('linkMicBattle', msg));
         tiktokConnectionWrapper.connection.on('linkMicArmies', msg => socket.emit('linkMicArmies', msg));
         tiktokConnectionWrapper.connection.on('liveIntro', msg => socket.emit('liveIntro', msg));
+        tiktokConnectionWrapper.connection.on('emote', msg => socket.emit('emote', msg));
+        tiktokConnectionWrapper.connection.on('envelope', msg => socket.emit('envelope', msg));
     });
 
     socket.on('disconnect', () => {
