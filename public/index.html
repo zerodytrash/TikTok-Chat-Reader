@@ -16,6 +16,19 @@
 
     <script src="connection.js"></script>
     <script src="app.js"></script>
+
+    <script>
+        function generateOverlay() {
+            let username = $('#uniqueIdInput').val();
+            let url = `/obs.html?username=${username}&showLikes=1&showChats=1&showGifts=1&showFollows=1&showJoins=1&bgColor=rgb(24,23,28)&fontColor=rgb(227,229,235)&fontSize=1.3em`;
+        
+            if(username) {
+                window.open(url, '_blank');
+            } else {
+                alert("Enter username");
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="head">
@@ -31,6 +44,7 @@
         <p>Enter the <b>@username</b> of a user who is currently live:</p>
         <input type="text" id="uniqueIdInput">
         <input type="button" id="connectButton" value="connect">
+        <a href="#" onclick="generateOverlay()">Generate Overlay URL</a>
     </div>
 
     <table class="splitstatetable">

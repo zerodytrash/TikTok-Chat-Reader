@@ -69,6 +69,7 @@ io.on('connection', (socket) => {
         tiktokConnectionWrapper.connection.on('liveIntro', msg => socket.emit('liveIntro', msg));
         tiktokConnectionWrapper.connection.on('emote', msg => socket.emit('emote', msg));
         tiktokConnectionWrapper.connection.on('envelope', msg => socket.emit('envelope', msg));
+        tiktokConnectionWrapper.connection.on('subscribe', msg => socket.emit('subscribe', msg));
     });
 
     socket.on('disconnect', () => {

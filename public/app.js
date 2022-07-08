@@ -7,6 +7,9 @@ let viewerCount = 0;
 let likeCount = 0;
 let diamondsCount = 0;
 
+// These settings are defined by obs.html
+if (!window.settings) window.settings = {};
+
 $(document).ready(() => {
     $('#connectButton').click(connect);
     $('#uniqueIdInput').on('keyup', function (e) {
@@ -14,10 +17,12 @@ $(document).ready(() => {
             connect();
         }
     });
+
+    if (window.settings.username) connect();
 })
 
 function connect() {
-    let uniqueId = $('#uniqueIdInput').val();
+    let uniqueId = window.settings.username || $('#uniqueIdInput').val();
     if (uniqueId !== '') {
 
         $('#stateText').text('Connecting...');
@@ -35,6 +40,13 @@ function connect() {
 
         }).catch(errorMessage => {
             $('#stateText').text(errorMessage);
+
+            // schedule next try if obs username set
+            if (window.settings.username) {
+                setTimeout(() => {
+                    connect(window.settings.username);
+                }, 30000);
+            }
         })
 
     } else {
@@ -63,7 +75,7 @@ function isPendingStreak(data) {
  * Add a new message to the chat container
  */
 function addChatItem(color, data, text, summarize) {
-    let container = $('.chatcontainer');
+    let container = location.href.includes('obs.html') ? $('.eventcontainer') : $('.chatcontainer');
 
     if (container.find('div').length > 500) {
         container.find('div').slice(0, 200).remove();
@@ -91,7 +103,7 @@ function addChatItem(color, data, text, summarize) {
  * Add a new gift to the gift container
  */
 function addGiftItem(data) {
-    let container = $('.giftcontainer');
+    let container = location.href.includes('obs.html') ? $('.eventcontainer') : $('.giftcontainer');
 
     if (container.find('div').length > 200) {
         container.find('div').slice(0, 100).remove();
@@ -145,19 +157,23 @@ connection.on('roomUser', (msg) => {
 
 // like stats
 connection.on('like', (msg) => {
-    if (typeof msg.likeCount === 'number') {
-        addChatItem('#447dd4', msg, msg.label.replace('{0:user}', '').replace('likes', `${msg.likeCount} likes`))
-    }
-
     if (typeof msg.totalLikeCount === 'number') {
         likeCount = msg.totalLikeCount;
         updateRoomStats();
+    }
+
+    if (window.settings.showLikes === "0") return;
+
+    if (typeof msg.likeCount === 'number') {
+        addChatItem('#447dd4', msg, msg.label.replace('{0:user}', '').replace('likes', `${msg.likeCount} likes`))
     }
 })
 
 // Member join
 let joinMsgDelay = 0;
 connection.on('member', (msg) => {
+    if (window.settings.showJoins === "0") return;
+
     let addDelay = 250;
     if (joinMsgDelay > 500) addDelay = 100;
     if (joinMsgDelay > 1000) addDelay = 0;
@@ -172,25 +188,38 @@ connection.on('member', (msg) => {
 
 // New chat comment received
 connection.on('chat', (msg) => {
+    if (window.settings.showChats === "0") return;
+
     addChatItem('', msg, msg.comment);
 })
 
 // New gift received
 connection.on('gift', (data) => {
-    addGiftItem(data);
-
     if (!isPendingStreak(data) && data.diamondCount > 0) {
         diamondsCount += (data.diamondCount * data.repeatCount);
         updateRoomStats();
     }
+
+    if (window.settings.showGifts === "0") return;
+
+    addGiftItem(data);
 })
 
 // share, follow
 connection.on('social', (data) => {
+    if (window.settings.showFollows === "0") return;
+
     let color = data.displayType.includes('follow') ? '#ff005e' : '#2fb816';
     addChatItem(color, data, data.label.replace('{0:user}', ''));
 })
 
 connection.on('streamEnd', () => {
     $('#stateText').text('Stream ended.');
+
+    // schedule next try if obs username set
+    if (window.settings.username) {
+        setTimeout(() => {
+            connect(window.settings.username);
+        }, 30000);
+    }
 })

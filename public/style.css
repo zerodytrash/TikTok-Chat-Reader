@@ -53,10 +53,14 @@ a {
     text-align: center;
 }
 
-.chatcontainer, .giftcontainer {
+.chatcontainer, .giftcontainer, .eventcontainer {
     overflow-y: scroll;
     height: calc(100vh - 240px);
     word-wrap: break-word;
+}
+
+.eventcontainer {
+    height: calc(100vh - 90px);
 }
 
 .chatcontainer {
