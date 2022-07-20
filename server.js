@@ -16,6 +16,10 @@ const io = new Server(httpServer, {
     }
 });
 
+if (!process.env.WEBCAST_COOKIES) {
+    console.warn('Missing WEBCAST_COOKIES in .env - Please provide your current session cookies (sessionid + ttwid)');
+}
+
 io.on('connection', (socket) => {
     let tiktokConnectionWrapper;
 
@@ -24,10 +28,20 @@ io.on('connection', (socket) => {
     socket.on('setUniqueId', (uniqueId, options) => {
 
         // Prohibit the client from specifying these options (for security reasons)
-        if (typeof options === 'object') {
+        if (typeof options === 'object' && options) {
             delete options.requestOptions;
             delete options.websocketOptions;
+        } else {
+            options = {};
         }
+
+        // Add session cookies from .env
+        const headers = {
+            'Cookie': process.env.WEBCAST_COOKIES
+        }
+        
+        options.requestHeaders = headers;
+        options.websocketHeaders = headers;
 
         // Is the client already connected to a stream? => Disconnect
         if (tiktokConnectionWrapper) {
@@ -42,7 +56,7 @@ io.on('connection', (socket) => {
 
         // Connect to the given username (uniqueId)
         try {
-            tiktokConnectionWrapper = new TikTokConnectionWrapper(uniqueId, options, true);
+            tiktokConnectionWrapper = new TikTokConnectionWrapper(uniqueId, options, true, process.env.WEBCAST_COOKIES);
             tiktokConnectionWrapper.connect();
         } catch (err) {
             socket.emit('tiktokDisconnected', err.toString());
