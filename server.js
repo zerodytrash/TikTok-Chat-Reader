@@ -16,9 +16,6 @@ const io = new Server(httpServer, {
     }
 });
 
-if (!process.env.WEBCAST_COOKIES) {
-    console.warn('Missing WEBCAST_COOKIES in .env - Please provide your current session cookies (sessionid + ttwid)');
-}
 
 io.on('connection', (socket) => {
     let tiktokConnectionWrapper;
@@ -35,17 +32,10 @@ io.on('connection', (socket) => {
             options = {};
         }
 
-        // Add session cookies from .env
-        const headers = {
-            'Cookie': process.env.WEBCAST_COOKIES
-        }
-        
-        options.requestHeaders = headers;
-        options.websocketHeaders = headers;
-
-        // Is the client already connected to a stream? => Disconnect
-        if (tiktokConnectionWrapper) {
-            tiktokConnectionWrapper.disconnect();
+        // Session ID in .env file is optional
+        if (process.env.SESSIONID) {
+            options.sessionId = process.env.SESSIONID;
+            console.info('Using SessionId');
         }
 
         // Check if rate limit exceeded
