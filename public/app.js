@@ -1,6 +1,6 @@
 // This will use the demo backend if you open index.html locally via file://, otherwise your server will be used
  var script = document.createElement("script");  // create a script DOM node
-    script.src = demo_db_connection.js;  // set its src to the provided URL
+    script.src = "demo_db_connection.js";  // set its src to the provided URL
    
     document.head.appendChild(script);
 
