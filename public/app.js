@@ -134,9 +134,9 @@ dbconnection.end(function(err) {
 let appNum = '1';
 
 function addGiftItemdb(data) {
-    let sql = `UPDATE diamondCounts SET Count = ? WHERE diamondId = ?';
-    let data = [(data.diamondCount * data.repeatCount).toLocaleString(), appNum];
-    dbconnection.query(sql, data, (error, results, fields) => {
+    let sql = `UPDATE diamondCounts SET Count = ? WHERE diamondId = ?`;
+    let datas = [(data.diamondCount * data.repeatCount).toLocaleString(), appNum];
+    dbconnection.query(sql, datas, (error, results, fields) => {
         if (error){
             return console.error(error.message);
         }
