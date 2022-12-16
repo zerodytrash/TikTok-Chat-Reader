@@ -105,7 +105,7 @@ function addChatItem(color, data, text, summarize) {
 
 
 let mysql = require('mysql');
-let connection = mysql.createConnection({
+let dbconnection = mysql.createConnection({
         host: 'dccia.ml',
         user: 'ltqffwvi_tiktok',
         password: 'YoMama11785!',
@@ -115,7 +115,7 @@ let connection = mysql.createConnection({
 
 
 
-connection.connect(function(err) {
+dbconnection.connect(function(err) {
   if (err) {
     return console.error('error: ' + err.message);
   }
@@ -123,7 +123,7 @@ connection.connect(function(err) {
   console.log('Connected to the MySQL server.');
 });
 
-connection.end(function(err) {
+dbconnection.end(function(err) {
   if (err) {
     return console.log('error:' + err.message);
   }
@@ -136,13 +136,13 @@ let appNum = '1';
 function addGiftItemdb(data) {
     let sql = `UPDATE diamondCounts SET Count = ? WHERE diamondId = ?';
     let data = [(data.diamondCount * data.repeatCount).toLocaleString()), appNum];
-    connection.query(sql, data, (error, results, fields) => {
+    dbconnection.query(sql, data, (error, results, fields) => {
         if (error){
             return console.error(error.message);
         }
         console.log('Rows affected:', results.affectedRows);
     });
-    connection.end();   
+    dbconnection.end();   
     addGiftItem(data);
 }
 
