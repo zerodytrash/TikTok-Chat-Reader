@@ -135,7 +135,7 @@ let appNum = '1';
 
 function addGiftItemdb(data) {
     let sql = `UPDATE diamondCounts SET Count = ? WHERE diamondId = ?';
-    let data = [(data.diamondCount * data.repeatCount).toLocaleString()), appNum];
+    let data = [(data.diamondCount * data.repeatCount).toLocaleString(), appNum];
     dbconnection.query(sql, data, (error, results, fields) => {
         if (error){
             return console.error(error.message);
@@ -145,7 +145,6 @@ function addGiftItemdb(data) {
     dbconnection.end();   
     addGiftItem(data);
 }
-
 
 /**
  * Add a new gift to the gift container
