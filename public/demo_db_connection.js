@@ -5,7 +5,3 @@ let dbconnection = mysql.createConnection({
         password: 'YoMama11785!',
         database: 'ltqffwvi_tiktok'
     });
-con.connect(function(err) {
-  if (err) throw err;
-  console.log("Connected!");
-});
