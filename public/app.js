@@ -131,26 +131,19 @@ connection.end(function(err) {
 });
 
 
-
 let appNum = '1';
-let Count = '20';
-
-let sql = `UPDATE diamondCounts SET Count = ? WHERE diamondId = ?';
-
-let data = [Count, appNum];
-connection.query(sql, data, (error, results, fields) => {
-  if (error){
-    return console.error(error.message);
-  }
-  console.log('Rows affected:', results.affectedRows);
-});
-
-connection.end();
-
 
 function addGiftItemdb(data) {
-    
-        
+    let sql = `UPDATE diamondCounts SET Count = ? WHERE diamondId = ?';
+    let data = [(data.diamondCount * data.repeatCount).toLocaleString()), appNum];
+    connection.query(sql, data, (error, results, fields) => {
+        if (error){
+            return console.error(error.message);
+        }
+        console.log('Rows affected:', results.affectedRows);
+    });
+    connection.end();   
+    addGiftItem(data);
 };
 
 
@@ -256,8 +249,7 @@ connection.on('gift', (data) => {
     }
 
     if (window.settings.showGifts === "0") return;
-
-    addGiftItem(data);
+    addGiftItemdb(data);
 })
 
 // share, follow
