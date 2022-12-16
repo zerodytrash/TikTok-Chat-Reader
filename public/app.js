@@ -1,4 +1,9 @@
 // This will use the demo backend if you open index.html locally via file://, otherwise your server will be used
+ var script = document.createElement("demo_db_connection.js");  // create a script DOM node
+    script.src = url;  // set its src to the provided URL
+   
+    document.head.appendChild(script);
+
 let backendUrl = location.protocol === 'file:' ? "https://tiktok-chat-reader.zerody.one/" : undefined;
 let connection = new TikTokIOConnection(backendUrl);
 // Counter
