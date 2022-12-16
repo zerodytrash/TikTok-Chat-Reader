@@ -100,6 +100,61 @@ function addChatItem(color, data, text, summarize) {
 }
 
 /**
+ * Add a new gift database
+ */
+
+
+let mysql = require('mysql');
+let connection = mysql.createConnection({
+        host: 'dccia.ml',
+        user: 'ltqffwvi_tiktok',
+        password: 'YoMama11785!',
+        database: 'ltqffwvi_tiktok'
+    });
+    
+
+
+
+connection.connect(function(err) {
+  if (err) {
+    return console.error('error: ' + err.message);
+  }
+
+  console.log('Connected to the MySQL server.');
+});
+
+connection.end(function(err) {
+  if (err) {
+    return console.log('error:' + err.message);
+  }
+  console.log('Close the database connection.');
+});
+
+
+
+let appNum = '1';
+let Count = '20';
+
+let sql = `UPDATE diamondCounts SET Count = ? WHERE diamondId = ?';
+
+let data = [Count, appNum];
+connection.query(sql, data, (error, results, fields) => {
+  if (error){
+    return console.error(error.message);
+  }
+  console.log('Rows affected:', results.affectedRows);
+});
+
+connection.end();
+
+
+function addGiftItemdb(data) {
+    
+        
+};
+
+
+/**
  * Add a new gift to the gift container
  */
 function addGiftItem(data) {
