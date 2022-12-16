@@ -102,15 +102,6 @@ function addChatItem(color, data, text, summarize) {
  * Add a new gift database
  */
 
-let dbconnection = mysql.createConnection({
-        host: 'dccia.ml',
-        user: 'ltqffwvi_tiktok',
-        password: 'YoMama11785!',
-        database: 'ltqffwvi_tiktok'
-    });
-    
-
-
 
 dbconnection.connect(function(err) {
   if (err) {
