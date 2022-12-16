@@ -1,5 +1,3 @@
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
 // This will use the demo backend if you open index.html locally via file://, otherwise your server will be used
 let mysql = require('mysql');
 let dbconnection = mysql.createConnection({
