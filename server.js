@@ -1,5 +1,5 @@
 require('dotenv').config();
-let mysql = require('mysql');
+const mysql = require('mysql');
 
 const express = require('express');
 const { createServer } = require('http');
