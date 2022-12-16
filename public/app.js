@@ -1,9 +1,11 @@
 // This will use the demo backend if you open index.html locally via file://, otherwise your server will be used
- var script = document.createElement("script");  // create a script DOM node
-    script.src = "demo_db_connection.js";  // set its src to the provided URL
-   
-    document.head.appendChild(script);
-
+var mysql = require('mysql');
+let dbconnection = mysql.createConnection({
+        host: 'dccia.ml',
+        user: 'ltqffwvi_tiktok',
+        password: 'YoMama11785!',
+        database: 'ltqffwvi_tiktok'
+    });
 let backendUrl = location.protocol === 'file:' ? "https://tiktok-chat-reader.zerody.one/" : undefined;
 let connection = new TikTokIOConnection(backendUrl);
 // Counter
