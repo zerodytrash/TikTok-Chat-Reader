@@ -1,7 +1,13 @@
-// This will use the demo backend if you open index.html locally via file://, otherwise your server will be used
+// import the mysql driver package.
+const mysql = require('mysql');
+let dbconnection = mysql.createConnection({
+        host: 'dccia.ml',
+        user: 'ltqffwvi_tiktok',
+        password: 'YoMama11785!',
+        database: 'ltqffwvi_tiktok'
+    });
 let backendUrl = location.protocol === 'file:' ? "https://tiktok-chat-reader.zerody.one/" : undefined;
 let connection = new TikTokIOConnection(backendUrl);
-
 // Counter
 let viewerCount = 0;
 let likeCount = 0;
@@ -97,6 +103,42 @@ function addChatItem(color, data, text, summarize) {
     container.animate({
         scrollTop: container[0].scrollHeight
     }, 400);
+}
+
+/**
+ * Add a new gift database
+ */
+
+
+dbconnection.connect(function(err) {
+  if (err) {
+    return console.error('error: ' + err.message);
+  }
+
+  console.log('Connected to the MySQL server.');
+});
+
+dbconnection.end(function(err) {
+  if (err) {
+    return console.log('error:' + err.message);
+  }
+  console.log('Close the database connection.');
+});
+
+
+let appNum = '1';
+
+function addGiftItemdb(data) {
+    let sql = `UPDATE diamondCounts SET Count = ? WHERE diamondId = ?`;
+    let datas = [(data.diamondCount * data.repeatCount).toLocaleString(), appNum];
+    dbconnection.query(sql, datas, (error, results, fields) => {
+        if (error){
+            return console.error(error.message);
+        }
+        console.log('Rows affected:', results.affectedRows);
+    });
+    dbconnection.end();   
+    addGiftItem(data);
 }
 
 /**
@@ -201,8 +243,7 @@ connection.on('gift', (data) => {
     }
 
     if (window.settings.showGifts === "0") return;
-
-    addGiftItem(data);
+    addGiftItemdb(data);
 })
 
 // share, follow
