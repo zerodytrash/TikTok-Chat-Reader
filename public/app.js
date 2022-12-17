@@ -1,5 +1,5 @@
-// This will use the demo backend if you open index.html locally via file://, otherwise your server will be used
-let mysql = require(["mysql"]);
+// import the mysql driver package.
+const mysql = require('mysql');
 let dbconnection = mysql.createConnection({
         host: 'dccia.ml',
         user: 'ltqffwvi_tiktok',
