@@ -14,11 +14,11 @@
     "mysql": "^2.18.1"
   },
   "devDependencies": {
-    "nodemon": "^2.0.19",
-    "dotenv": "^16.0.0",
-    "express": "^4.17.2",
-    "mysql": "^2.18.1",
-    "socket.io": "^4.4.1",
-    "tiktok-live-connector": "^1.0.0"
+    "dependencies": {
+        "dotenv": "^16.0.0",
+        "express": "^4.17.2",
+        "mysql": "^2.18.1",
+        "socket.io": "^4.4.1",
+        "tiktok-live-connector": "^1.0.0"
   }
 }
