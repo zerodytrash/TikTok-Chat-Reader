@@ -1,0 +1,21 @@
+LÉAME.md
+TikTok-Chat-Lector
+Un lector de chat para TikTok LIVE que utiliza TikTok-Live-Connector y Socket.IO para reenviar los datos al cliente. Este proyecto de demostración utiliza la API no oficial de TikTok para recuperar comentarios de chat, obsequios y otros eventos de TikTok LIVE.
+
+Demostración: https://tiktok-chat-reader.zerody.one/
+Instalación
+Para ejecutar el lector de chat localmente, siga estos pasos:
+
+Instale Node.js en su sistema
+Clone este repositorio o descargue y extraiga este archivo ZIP
+Abra una consola/terminal en el directorio raíz del proyecto
+Ingrese npm ipara instalar todas las dependencias requeridas
+Entrar node server.jspara iniciar el servidor de aplicaciones
+Ahora debería ver el siguiente mensaje: Server running! Please visit http://localhost:8091
+simplemente abra http://localhost:8091/ en su navegador. Eso es.
+
+Si tiene problemas con Node.js, también puede abrirlo index.htmldesde la publiccarpeta.
+Esto utilizará el backend del servidor del sitio de demostración , que es suficiente para fines de prueba. Si desea ofrecerlo a otros o hacer muchas conexiones al mismo tiempo, considere usar su propio servidor.
+
+Captura de pantalla
+TikTok LIVE Chat Reader (Demostración)
