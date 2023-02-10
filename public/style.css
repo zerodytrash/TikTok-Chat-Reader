@@ -46,16 +46,18 @@ a {
 }
 
 .splitstatetable td {
-    width: 50%;
+    width: 33vw;
 }
 
-.containerheader {
-    text-align: center;
-}
-
-.chatcontainer, .giftcontainer, .eventcontainer {
+.chatcontainer, .eventcontainer {
     overflow-y: scroll;
     height: calc(100vh - 240px);
+    word-wrap: break-word;
+}
+
+.likecontainer, .giftcontainer, .joincontainer, .sharecontainer {
+    overflow-y: scroll;
+    height: calc(45vh - 120px);
     word-wrap: break-word;
 }
 
@@ -63,14 +65,6 @@ a {
     height: calc(100vh - 90px);
 }
 
-.chatcontainer {
-    min-width: 400px;
-    max-width: calc(100vw - 430px);
-}
-
-.giftcontainer {
-    min-width: 400px;
-}
 
 .miniprofilepicture {
     height: 20px;
