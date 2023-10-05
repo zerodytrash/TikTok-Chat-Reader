@@ -1,3 +1,35 @@
+
+const axios = require('axios');
+const proxyList = [
+  'http://proxy1.example.com:8080',
+  'http://proxy2.example.com:8080',
+  // ...more proxies
+];
+
+function getRandomProxy() {
+  const index = Math.floor(Math.random() * proxyList.length);
+  return proxyList[index];
+}
+
+async function makeRequestWithRandomProxy(url) {
+  const proxyUrl = getRandomProxy();
+  
+  const axiosInstance = axios.create({
+    proxy: {
+      host: proxyUrl.split(':')[0],
+      port: proxyUrl.split(':')[1]
+    }
+  });
+
+  try {
+    const response = await axiosInstance.get(url);
+    return response.data;
+  } catch (error) {
+    console.error(`Error making request to ${url} with proxy ${proxyUrl}: ${error}`);
+    return null;
+  }
+}
+
 require('dotenv').config();
 
 const express = require('express');

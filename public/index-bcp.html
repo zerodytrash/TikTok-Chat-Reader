@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TikTok LIVE Chat Reader (Demo)</title>
+
+    <meta
+      name="description"
+      content="A chat reader for TikTok LIVE utilizing TikTok-Live-Connector and Socket.IO to forward the data to the client. This demo project uses the unofficial TikTok API to retrieve chat comments, gifts and other events from TikTok LIVE."
+    />
+    <meta
+      name="keywords"
+      content="TikTok,Live,Livestream,Chat,Reader,Scraper,Tracker,tiktok.com,broadcast,api,library,node,node.js,javascript"
+    />
+
+    <link rel="stylesheet" href="style.css" />
+
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <script src="connection.js"></script>
+    <script src="app.js"></script>
+
+    <script>
+      function generateOverlay() {
+        let username = $("#uniqueIdInput").val();
+        let url = `/obs.html?username=${username}&showLikes=1&showChats=1&showGifts=1&showFollows=1&showJoins=1&bgColor=rgb(24,23,28)&fontColor=rgb(227,229,235)&fontSize=1.3em`;
+
+        if (username) {
+          window.open(url, "_blank");
+        } else {
+          alert("Enter username");
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div class="head">
+      <h1>TikTok LIVE Chat Reader</h1>
+      <span class="subTitle"
+        >Source:
+        <a href="https://github.com/zerodytrash/TikTok-Chat-Reader"
+          >https://github.com/zerodytrash/TikTok-Chat-Reader</a
+        ></span
+      >
+    </div>
+
+    <div>
+      A chat reader for
+      <a href="https://www.tiktok.com/live">TikTok LIVE</a> utilizing
+      <a href="https://github.com/zerodytrash/TikTok-Live-Connector"
+        >TikTok-Live-Connector</a
+      >
+      and <a href="https://socket.io/">Socket.IO</a> to forward the data to the
+      client. More Tools available at
+      <a href="https://tikfinity.zerody.one/" target="_blank">TikFinity</a>.
+    </div>
+
+    <div class="inputFields">
+      <p>Enter the <b>@username</b> of a user who is currently live:</p>
+      <input type="text" id="uniqueIdInput" />
+      <input type="button" id="connectButton" value="connect" />
+      <a href="#" onclick="generateOverlay()">Generate Overlay URL</a>
+    </div>
+
+    <table class="splitstatetable">
+      <tr>
+        <td>
+          <pre id="stateText"></pre>
+        </td>
+        <td>
+          <div id="roomStats"></div>
+        </td>
+      </tr>
+    </table>
+
+    <table class="splitchattable">
+      <tr>
+        <td>
+          <div class="chatcontainer">
+            <h3 class="containerheader">Chats</h3>
+          </div>
+        </td>
+        <td>
+          <div class="giftcontainer">
+            <h3 class="containerheader">Gifts</h3>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
