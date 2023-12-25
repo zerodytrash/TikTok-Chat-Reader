@@ -1,0 +1,18 @@
+version: '3.7'
+networks:
+  nginx:
+    external: true
+services:
+  tiktokapi:
+    build: . 
+    restart: unless-stopped
+    container_name: node-tiktok-app
+    environment:
+        - NODE_ENV=production
+        - url=https://domain.tld
+    ports:
+        - '8081:8081'
+    networks:
+        - nginx
+    command: sh -c "node server.js"
+    
