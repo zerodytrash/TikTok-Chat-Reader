@@ -1,3 +1,9 @@
 {
-"isGitignoreExtActive": true,
+    "isGitignoreExtActive": true,
+    "IDX.aI.enableInlineCompletion": true,
+    "IDX.aI.enableCodebaseIndexing": true,
+    "terminal.integrated.hideOnStartup": "always",
+    "workbench.editor.restoreViewState": false,
+    "explorer.autoReveal": false,
+    "security.workspace.trust.startupPrompt": "never",
 }
