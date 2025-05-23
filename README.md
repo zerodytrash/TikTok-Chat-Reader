@@ -21,3 +21,46 @@ This will use the server backend of the [demo site](https://tiktok-chat-reader.z
 ## Screenshot
 
 ![TikTok LIVE Chat Reader (Demo)](https://user-images.githubusercontent.com/59258980/153956504-c585b14b-a50e-43f0-a994-64adcaface2e.png)
+
+## Docker
+
+This application can be built and run as a Docker container.
+
+### Building the Image
+
+To build the Docker image, navigate to the project's root directory (where the `Dockerfile` is located) and run:
+
+```sh
+docker build -t tiktok-live-connector-app .
+```
+
+### Running the Container
+
+To run the Docker container:
+
+```sh
+docker run -p 8081:8081 --env-file .env tiktok-live-connector-app
+```
+
+Or if you don't want to use an .env file, you can pass environment variables directly:
+
+```sh
+docker run -p 8081:8081 \
+  -e PORT=8081 \
+  -e SESSIONID="your_session_id_here" \
+  -e ENABLE_RATE_LIMIT="true_or_false" \
+  tiktok-live-connector-app
+```
+
+**Note:**
+*   Replace `"your_session_id_here"` with your actual TikTok session ID if you intend to use it.
+*   The `PORT` environment variable inside the container is set by the `EXPOSE` instruction in the Dockerfile and the `CMD` instruction. The first `8081` in `-p 8081:8081` is the host port you want to map to the container's exposed port.
+*   `ENABLE_RATE_LIMIT` is optional and can be set to `true` or `false`.
+
+### Environment Variables
+
+The following environment variables can be used to configure the application when running the Docker container:
+
+*   `PORT`: The port on which the application server will listen (default: `8081`).
+*   `SESSIONID`: (Optional) Your TikTok session ID.
+*   `ENABLE_RATE_LIMIT`: (Optional) Set to `true` to enable rate limiting for connections.
