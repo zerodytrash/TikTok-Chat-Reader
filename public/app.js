@@ -179,7 +179,8 @@ connection.on('like', (msg) => {
     if (window.settings.showLikes === "0") return;
 
     if (typeof msg.likeCount === 'number') {
-        addChatItem('#447dd4', msg, msg.label.replace('{0:user}', '').replace('likes', `${msg.likeCount} likes`))
+        let likeLabel = msg.label ? msg.label.replace('{0:user}', '').replace('likes', `${msg.likeCount} likes`) : `${msg.likeCount} likes`;
+        addChatItem('#447dd4', msg, likeLabel)
     }
 })
 

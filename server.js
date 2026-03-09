@@ -28,7 +28,7 @@ io.on('connection', (socket) => {
 
     console.info('New connection from origin', socket.handshake.headers['origin'] || socket.handshake.headers['referer']);
 
-    socket.on('setUniqueId', (uniqueId, options) => {
+    socket.on('setUniqueId', async (uniqueId, options) => {
 
         // Prohibit the client from specifying these options (for security reasons)
         if (typeof options === 'object' && options) {
@@ -36,6 +36,33 @@ io.on('connection', (socket) => {
             delete options.websocketOptions;
         } else {
             options = {};
+        }
+
+        // Verify reCAPTCHA v3 token if configured
+        if (process.env.RECAPTCHA_SECRET_KEY) {
+            const recaptchaToken = options.recaptchaToken;
+            delete options.recaptchaToken;
+
+            if (!recaptchaToken) {
+                socket.emit('tiktokDisconnected', 'reCAPTCHA verification required.');
+                return;
+            }
+
+            try {
+                const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${encodeURIComponent(process.env.RECAPTCHA_SECRET_KEY)}&response=${encodeURIComponent(recaptchaToken)}`;
+                const response = await fetch(verifyUrl, { method: 'POST' });
+                const result = await response.json();
+
+                if (!result.success || result.score < 0.5) {
+                    console.info(`reCAPTCHA failed for ${uniqueId}: success=${result.success}, score=${result.score}`);
+                    socket.emit('tiktokDisconnected', 'reCAPTCHA verification failed. Please try again.');
+                    return;
+                }
+            } catch (err) {
+                console.error('reCAPTCHA verification error:', err);
+                socket.emit('tiktokDisconnected', 'reCAPTCHA verification error. Please try again.');
+                return;
+            }
         }
 
         // Session ID in .env file is optional
@@ -92,6 +119,14 @@ io.on('connection', (socket) => {
 setInterval(() => {
     io.emit('statistic', {globalConnectionCount: getGlobalConnectionCount()});
 }, 5000)
+
+// reCAPTCHA v3 config endpoint
+app.get('/recaptcha-config', (req, res) => {
+    res.json({
+        enabled: !!process.env.RECAPTCHA_SITE_KEY,
+        siteKey: process.env.RECAPTCHA_SITE_KEY || null
+    });
+});
 
 // Serve frontend files
 app.use(express.static('public'));

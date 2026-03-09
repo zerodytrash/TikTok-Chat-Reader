@@ -63,12 +63,25 @@ class TikTokConnectionWrapper extends EventEmitter {
         }).catch((err) => {
             this.log(`${isReconnect ? 'Reconnect' : 'Connection'} failed, ${err}`);
 
+            let errorMessage = err.message || err.toString();
+
+            // Extract detailed sub-errors if available (e.g. FetchIsLiveError)
+            if (Array.isArray(err.errors) && err.errors.length > 0) {
+                const details = err.errors
+                    .map(e => e.message || e.toString())
+                    .filter(Boolean)
+                    .join(' | ');
+                if (details) {
+                    errorMessage += ': ' + details;
+                }
+            }
+
             if (isReconnect) {
                 // Schedule the next reconnect attempt
-                this.scheduleReconnect(err);
+                this.scheduleReconnect(errorMessage);
             } else {
                 // Notify client
-                this.emit('disconnected', err.toString());
+                this.emit('disconnected', errorMessage);
             }
         })
     }
