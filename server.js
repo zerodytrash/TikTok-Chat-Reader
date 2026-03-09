@@ -5,6 +5,12 @@ const {createServer} = require('http');
 const {Server} = require('socket.io');
 const {TikTokConnectionWrapper, getGlobalConnectionCount} = require('./connectionWrapper');
 const {clientBlocked} = require('./limiter');
+const {SignConfig} = require('tiktok-live-connector');
+
+if (process.env.API_KEY) {
+    SignConfig.apiKey = process.env.API_KEY;
+    console.info('Using Euler API key from environment');
+}
 
 const app = express();
 const httpServer = createServer(app);

@@ -10,8 +10,20 @@
     <link rel="stylesheet" href="style.css">
 
     <style>
+        :root {
+            --bg: rgb(24, 23, 28);
+            --bg-subtle: rgb(24, 23, 28);
+            --bg-card: transparent;
+            --text: rgb(227, 229, 235);
+            --text-secondary: rgba(227, 229, 235, 0.6);
+            --border: transparent;
+            --shadow: none;
+            --link: rgb(102, 143, 217);
+        }
+
         body {
             min-width: 200px !important;
+            padding: 10px !important;
         }
 
         .usernamelink {
@@ -21,6 +33,12 @@
         ::-webkit-scrollbar {
             width: 0px;
             height: 0px;
+        }
+
+        .eventcontainer {
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
         }
 
         .eventcontainer > div {
