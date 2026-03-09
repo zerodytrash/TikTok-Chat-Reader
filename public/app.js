@@ -24,8 +24,39 @@ function downloadJSON(data, filename) {
 // These settings are defined by obs.html
 if (!window.settings) window.settings = {};
 
+let isConnected = false;
+
+function setButtonState(state) {
+    const $connect = $('#connectButton');
+    const $disconnect = $('#disconnectButton');
+    const $input = $('#uniqueIdInput');
+
+    if (state === 'connecting') {
+        $connect.val('Connecting...').prop('disabled', true);
+        $disconnect.hide();
+        $input.prop('disabled', true);
+    } else if (state === 'connected') {
+        isConnected = true;
+        $connect.hide();
+        $disconnect.show();
+        $input.prop('disabled', true);
+    } else {
+        isConnected = false;
+        $connect.val('Connect').prop('disabled', false).show();
+        $disconnect.hide();
+        $input.prop('disabled', false);
+    }
+}
+
 $(document).ready(() => {
+    // Pre-fill last connected username
+    const lastUser = localStorage.getItem('lastUsername');
+    if (lastUser && !window.settings.username) {
+        $('#uniqueIdInput').val(lastUser);
+    }
+
     $('#connectButton').click(connect);
+    $('#disconnectButton').click(disconnect);
     $('#uniqueIdInput').on('keyup', function (e) {
         if (e.key === 'Enter') {
             connect();
@@ -40,11 +71,14 @@ function connect() {
     if (uniqueId !== '') {
 
         $('#stateText').text('Connecting...');
+        setButtonState('connecting');
 
         connection.connect(uniqueId, {
             enableExtendedGiftInfo: true
         }).then(state => {
             $('#stateText').text(`Connected to roomId ${state.roomId}`);
+            setButtonState('connected');
+            localStorage.setItem('lastUsername', uniqueId);
 
             // reset stats
             viewerCount = 0;
@@ -54,6 +88,7 @@ function connect() {
 
         }).catch(errorMessage => {
             $('#stateText').text(errorMessage);
+            setButtonState('idle');
 
             // schedule next try if obs username set
             if (window.settings.username) {
@@ -66,6 +101,12 @@ function connect() {
     } else {
         alert('no username entered');
     }
+}
+
+function disconnect() {
+    connection.disconnect();
+    $('#stateText').text('Disconnected.');
+    setButtonState('idle');
 }
 
 // Prevent Cross site scripting (XSS)
