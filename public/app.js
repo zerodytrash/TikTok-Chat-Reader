@@ -76,11 +76,21 @@ $(document).ready(() => {
         $('#uniqueIdInput').val(lastUser);
     }
 
-    $('#connectButton').click(connect);
+    $('#connectButton').click(() => {
+        if (typeof connectWithCaptcha === 'function') {
+            connectWithCaptcha();
+        } else {
+            connect();
+        }
+    });
     $('#disconnectButton').click(disconnect);
     $('#uniqueIdInput').on('keyup', function (e) {
         if (e.key === 'Enter') {
-            connect();
+            if (typeof connectWithCaptcha === 'function') {
+                connectWithCaptcha();
+            } else {
+                connect();
+            }
         }
     });
 
@@ -96,9 +106,20 @@ function connect() {
         $('#stateText').text('');
         setButtonState('connecting');
 
-        connection.connect(uniqueId, {
-            enableExtendedGiftInfo: true
-        }).then(state => {
+        let options = { enableExtendedGiftInfo: true };
+
+        // Attach reCAPTCHA token from captcha popup (index.html)
+        if (window._pendingRecaptchaToken) {
+            options.recaptchaToken = window._pendingRecaptchaToken;
+            window._pendingRecaptchaToken = null;
+        }
+
+        // Attach bypass token from URL (obs.html)
+        if (window.settings && window.settings.token) {
+            options.bypassToken = window.settings.token;
+        }
+
+        connection.connect(uniqueId, options).then(state => {
             $('#stateText').text('');
             setButtonState('connected');
             localStorage.setItem('lastUsername', uniqueId);

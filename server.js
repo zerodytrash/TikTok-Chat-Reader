@@ -1,8 +1,10 @@
 require('dotenv').config();
 
+const crypto = require('crypto');
 const express = require('express');
 const {createServer} = require('http');
 const {Server} = require('socket.io');
+const NodeCache = require('node-cache');
 const {TikTokConnectionWrapper, getGlobalConnectionCount} = require('./connectionWrapper');
 const {clientBlocked} = require('./limiter');
 const {SignConfig} = require('tiktok-live-connector');
@@ -15,6 +17,9 @@ if (process.env.API_KEY) {
 const app = express();
 const httpServer = createServer(app);
 
+// Bypass token cache (tokens valid for 24 hours)
+const bypassTokens = new NodeCache({ stdTTL: 86400 });
+
 // Enable cross-origin resource sharing
 const io = new Server(httpServer, {
     cors: {
@@ -22,6 +27,12 @@ const io = new Server(httpServer, {
     }
 });
 
+async function verifyRecaptcha(token) {
+    const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${encodeURIComponent(process.env.RECAPTCHA_SECRET_KEY)}&response=${encodeURIComponent(token)}`;
+    const response = await fetch(verifyUrl, { method: 'POST' });
+    const result = await response.json();
+    return result.success;
+}
 
 io.on('connection', (socket) => {
     let tiktokConnectionWrapper;
@@ -38,29 +49,29 @@ io.on('connection', (socket) => {
             options = {};
         }
 
-        // Verify reCAPTCHA v3 token if configured
+        // Verify reCAPTCHA v2 or bypass token if configured
         if (process.env.RECAPTCHA_SECRET_KEY) {
             const recaptchaToken = options.recaptchaToken;
+            const bypassToken = options.bypassToken;
             delete options.recaptchaToken;
+            delete options.bypassToken;
 
-            if (!recaptchaToken) {
-                socket.emit('tiktokDisconnected', 'reCAPTCHA verification required.');
-                return;
-            }
-
-            try {
-                const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${encodeURIComponent(process.env.RECAPTCHA_SECRET_KEY)}&response=${encodeURIComponent(recaptchaToken)}`;
-                const response = await fetch(verifyUrl, { method: 'POST' });
-                const result = await response.json();
-
-                if (!result.success || result.score < 0.5) {
-                    console.info(`reCAPTCHA failed for ${uniqueId}: success=${result.success}, score=${result.score}`);
-                    socket.emit('tiktokDisconnected', 'reCAPTCHA verification failed. Please try again.');
+            if (bypassToken && bypassTokens.has(bypassToken)) {
+                // Valid bypass token, allow through
+            } else if (recaptchaToken) {
+                try {
+                    const success = await verifyRecaptcha(recaptchaToken);
+                    if (!success) {
+                        socket.emit('tiktokDisconnected', 'reCAPTCHA verification failed. Please try again.');
+                        return;
+                    }
+                } catch (err) {
+                    console.error('reCAPTCHA verification error:', err);
+                    socket.emit('tiktokDisconnected', 'reCAPTCHA verification error. Please try again.');
                     return;
                 }
-            } catch (err) {
-                console.error('reCAPTCHA verification error:', err);
-                socket.emit('tiktokDisconnected', 'reCAPTCHA verification error. Please try again.');
+            } else {
+                socket.emit('tiktokDisconnected', 'reCAPTCHA verification required.');
                 return;
             }
         }
@@ -117,7 +128,6 @@ io.on('connection', (socket) => {
         if (tiktokConnectionWrapper) {
             tiktokConnectionWrapper.disconnect();
             tiktokConnectionWrapper = null;
-            socket.emit('tiktokDisconnected', 'Disconnected by user.');
         }
     });
 
@@ -133,12 +143,38 @@ setInterval(() => {
     io.emit('statistic', {globalConnectionCount: getGlobalConnectionCount()});
 }, 5000)
 
-// reCAPTCHA v3 config endpoint
+// reCAPTCHA config endpoint
 app.get('/recaptcha-config', (req, res) => {
     res.json({
         enabled: !!process.env.RECAPTCHA_SITE_KEY,
         siteKey: process.env.RECAPTCHA_SITE_KEY || null
     });
+});
+
+// Generate a bypass token after verifying reCAPTCHA v2 (for overlay URLs)
+app.post('/generate-overlay-token', express.json(), async (req, res) => {
+    if (!process.env.RECAPTCHA_SECRET_KEY) {
+        return res.json({ token: null });
+    }
+
+    const { recaptchaToken } = req.body;
+    if (!recaptchaToken) {
+        return res.status(400).json({ error: 'reCAPTCHA token required' });
+    }
+
+    try {
+        const success = await verifyRecaptcha(recaptchaToken);
+        if (!success) {
+            return res.status(403).json({ error: 'reCAPTCHA verification failed' });
+        }
+
+        const token = crypto.randomBytes(32).toString('hex');
+        bypassTokens.set(token, true);
+        return res.json({ token });
+    } catch (err) {
+        console.error('reCAPTCHA verification error:', err);
+        return res.status(500).json({ error: 'Verification error' });
+    }
 });
 
 // Serve frontend files

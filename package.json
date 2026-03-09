@@ -2,6 +2,7 @@
   "dependencies": {
     "dotenv": "^16.0.0",
     "express": "^4.17.2",
+    "node-cache": "^5.1.2",
     "socket.io": "^4.4.1",
     "tiktok-live-connector": "^2.1.1-beta1"
   }

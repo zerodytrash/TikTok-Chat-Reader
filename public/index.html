@@ -21,16 +21,114 @@
     <script src="connection.js"></script>
     <script src="app.js"></script>
 
+    <style>
+        .captcha-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .captcha-overlay.active {
+            display: flex;
+        }
+        .captcha-box {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+    </style>
+
     <script>
+        let recaptchaSiteKey = null;
+        let captchaCallback = null;
+        let captchaWidgetId = null;
+
+        // Load recaptcha config and script
+        fetch('/recaptcha-config').then(r => r.json()).then(config => {
+            if (!config.enabled || !config.siteKey) return;
+            recaptchaSiteKey = config.siteKey;
+
+            const script = document.createElement('script');
+            script.src = 'https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit';
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        });
+
+        function onRecaptchaLoad() {
+            captchaWidgetId = grecaptcha.render('recaptchaWidget', {
+                sitekey: recaptchaSiteKey,
+                callback: onCaptchaSolved
+            });
+        }
+
+        function onCaptchaSolved(token) {
+            closeCaptcha();
+            if (captchaCallback) {
+                captchaCallback(token);
+                captchaCallback = null;
+            }
+        }
+
+        function showCaptcha(callback) {
+            if (!recaptchaSiteKey) {
+                // reCAPTCHA not configured, skip
+                callback(null);
+                return;
+            }
+            captchaCallback = callback;
+            if (captchaWidgetId !== null) {
+                grecaptcha.reset(captchaWidgetId);
+            }
+            document.getElementById('captchaOverlay').classList.add('active');
+        }
+
+        function closeCaptcha() {
+            document.getElementById('captchaOverlay').classList.remove('active');
+        }
+
+        // Connect with captcha
+        function connectWithCaptcha() {
+            showCaptcha((token) => {
+                window._pendingRecaptchaToken = token;
+                connect();
+            });
+        }
+
+        // Generate overlay with captcha
         function generateOverlay() {
             let username = $('#uniqueIdInput').val();
-            let url = `/obs.html?username=${username}&showLikes=1&showChats=1&showGifts=1&showFollows=1&showJoins=1&bgColor=rgb(24,23,28)&fontColor=rgb(227,229,235)&fontSize=1.3em`;
-
-            if (username) {
-                window.open(url, '_blank');
-            } else {
+            if (!username) {
                 alert("Enter username");
+                return;
             }
+
+            showCaptcha(async (recaptchaToken) => {
+                let tokenParam = '';
+
+                if (recaptchaToken) {
+                    try {
+                        const res = await fetch('/generate-overlay-token', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ recaptchaToken })
+                        });
+                        const data = await res.json();
+                        if (data.token) {
+                            tokenParam = `&token=${data.token}`;
+                        }
+                    } catch (err) {
+                        console.error('Failed to generate overlay token:', err);
+                    }
+                }
+
+                let url = `/obs.html?username=${username}&showLikes=1&showChats=1&showGifts=1&showFollows=1&showJoins=1&bgColor=rgb(24,23,28)&fontColor=rgb(227,229,235)&fontSize=1.3em${tokenParam}`;
+                window.open(url, '_blank');
+            });
         }
     </script>
 </head>
@@ -70,6 +168,12 @@
         <div class="giftcontainer">
             <h3 class="containerheader"><span>Gifts</span><span class="headeractions"><button class="downloadbtn" id="giftAutoScroll" onclick="toggleGiftAutoScroll()">Auto-scroll: ON</button><button class="downloadbtn" onclick="downloadJSON(giftHistory, 'gifts.json')">Download</button></span></h3>
         </div>
+    </div>
+</div>
+
+<div id="captchaOverlay" class="captcha-overlay" onclick="closeCaptcha()">
+    <div class="captcha-box" onclick="event.stopPropagation()">
+        <div id="recaptchaWidget"></div>
     </div>
 </div>
 </body>
