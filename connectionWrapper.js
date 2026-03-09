@@ -27,9 +27,9 @@ class TikTokConnectionWrapper extends EventEmitter {
             this.reconnectEnabled = false;
         })
 
-        this.connection.on('disconnected', () => {
+        this.connection.on('disconnected', ({ code, reason }) => {
             globalConnectionCount -= 1;
-            this.log(`TikTok connection disconnected`);
+            this.log(`TikTok connection disconnected (code: ${code}, reason: ${reason})`);
             this.scheduleReconnect();
         });
 
@@ -41,7 +41,7 @@ class TikTokConnectionWrapper extends EventEmitter {
 
     connect(isReconnect) {
         this.connection.connect().then((state) => {
-            this.log(`${isReconnect ? 'Reconnected' : 'Connected'} to roomId ${state.roomId}, websocket: ${state.upgradedToWebsocket}`);
+            this.log(`${isReconnect ? 'Reconnected' : 'Connected'} to roomId ${state.roomId}`);
 
             globalConnectionCount += 1;
 
@@ -105,7 +105,7 @@ class TikTokConnectionWrapper extends EventEmitter {
         this.clientDisconnected = true;
         this.reconnectEnabled = false;
 
-        if (this.connection.getState().isConnected) {
+        if (this.connection.isConnected) {
             this.connection.disconnect();
         }
     }
