@@ -12,7 +12,7 @@ let chatHistory = [];
 let giftHistory = [];
 
 function downloadJSON(data, filename) {
-    let blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    let blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
     let url = URL.createObjectURL(blob);
     let a = document.createElement('a');
     a.href = url;
@@ -106,7 +106,7 @@ function connect() {
         $('#stateText').text('');
         setButtonState('connecting');
 
-        let options = { enableExtendedGiftInfo: true };
+        let options = {};
 
         // Attach reCAPTCHA token from captcha popup (index.html)
         if (window._pendingRecaptchaToken) {
@@ -180,7 +180,8 @@ function addChatItem(color, data, text, summarize) {
         container.find('div').slice(0, 200).remove();
     }
 
-    container.find('.temporary').remove();;
+    container.find('.temporary').remove();
+    ;
 
     container.append(`
         <div class=${summarize ? 'temporary' : 'static'}>
@@ -292,7 +293,7 @@ connection.on('member', (msg) => {
 
 // New chat comment received
 connection.on('chat', (msg) => {
-    chatHistory.push({ timestamp: Date.now(), uniqueId: msg.uniqueId, comment: msg.comment, userId: msg.userId });
+    chatHistory.push({timestamp: Date.now(), uniqueId: msg.uniqueId, comment: msg.comment, userId: msg.userId});
 
     if (window.settings.showChats === "0") return;
 
@@ -301,7 +302,16 @@ connection.on('chat', (msg) => {
 
 // New gift received
 connection.on('gift', (data) => {
-    giftHistory.push({ timestamp: Date.now(), uniqueId: data.uniqueId, userId: data.userId, giftId: data.giftId, giftName: data.giftName, repeatCount: data.repeatCount, diamondCount: data.diamondCount, repeatEnd: data.repeatEnd });
+    giftHistory.push({
+        timestamp: Date.now(),
+        uniqueId: data.uniqueId,
+        userId: data.userId,
+        giftId: data.giftId,
+        giftName: data.giftName,
+        repeatCount: data.repeatCount,
+        diamondCount: data.diamondCount,
+        repeatEnd: data.repeatEnd
+    });
 
     if (!isPendingStreak(data) && data.diamondCount > 0) {
         diamondsCount += (data.diamondCount * data.repeatCount);
