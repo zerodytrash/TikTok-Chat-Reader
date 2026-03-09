@@ -1,15 +1,15 @@
 require('dotenv').config();
 
 const express = require('express');
-const { createServer } = require('http');
-const { Server } = require('socket.io');
-const { TikTokConnectionWrapper, getGlobalConnectionCount } = require('./connectionWrapper');
-const { clientBlocked } = require('./limiter');
+const {createServer} = require('http');
+const {Server} = require('socket.io');
+const {TikTokConnectionWrapper, getGlobalConnectionCount} = require('./connectionWrapper');
+const {clientBlocked} = require('./limiter');
 
 const app = express();
 const httpServer = createServer(app);
 
-// Enable cross origin resource sharing
+// Enable cross-origin resource sharing
 const io = new Server(httpServer, {
     cors: {
         origin: '*'
@@ -84,7 +84,7 @@ io.on('connection', (socket) => {
 
 // Emit global connection statistics
 setInterval(() => {
-    io.emit('statistic', { globalConnectionCount: getGlobalConnectionCount() });
+    io.emit('statistic', {globalConnectionCount: getGlobalConnectionCount()});
 }, 5000)
 
 // Serve frontend files
