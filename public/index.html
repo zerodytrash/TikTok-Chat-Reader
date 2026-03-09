@@ -51,33 +51,26 @@
     <p>Enter the <b>@username</b> of a user who is currently live:</p>
     <input type="text" id="uniqueIdInput">
     <input type="button" id="connectButton" value="Connect">
+    <input type="button" id="disconnectButton" class="disconnect" value="Disconnect" style="display:none">
     <a href="#" onclick="generateOverlay()">Generate Overlay URL</a>
 </div>
 
-<table class="splitstatetable">
-    <tr>
-        <td>
-            <pre id="stateText"></pre>
-        </td>
-        <td>
-            <div id="roomStats"></div>
-        </td>
-    </tr>
-</table>
+<div class="splitstatebar">
+    <pre id="stateText"></pre>
+    <div id="roomStats"></div>
+</div>
 
-<table class="splitchattable">
-    <tr>
-        <td>
-            <div class="chatcontainer">
-                <h3 class="containerheader">Chats <button class="downloadbtn" onclick="downloadJSON(chatHistory, 'chats.json')">Download</button></h3>
-            </div>
-        </td>
-        <td>
-            <div class="giftcontainer">
-                <h3 class="containerheader">Gifts <button class="downloadbtn" onclick="downloadJSON(giftHistory, 'gifts.json')">Download</button></h3>
-            </div>
-        </td>
-    </tr>
-</table>
+<div class="splitchattable">
+    <div>
+        <div class="chatcontainer">
+            <h3 class="containerheader">Chats <button class="downloadbtn" onclick="downloadJSON(chatHistory, 'chats.json')">Download</button></h3>
+        </div>
+    </div>
+    <div>
+        <div class="giftcontainer">
+            <h3 class="containerheader">Gifts <button class="downloadbtn" onclick="downloadJSON(giftHistory, 'gifts.json')">Download</button></h3>
+        </div>
+    </div>
+</div>
 </body>
 </html>

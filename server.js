@@ -77,6 +77,11 @@ io.on('connection', (socket) => {
             return;
         }
 
+        // Disconnect previous connection if exists
+        if (tiktokConnectionWrapper) {
+            tiktokConnectionWrapper.disconnect();
+        }
+
         // Connect to the given username (uniqueId)
         try {
             tiktokConnectionWrapper = new TikTokConnectionWrapper(uniqueId, options, true);
@@ -106,6 +111,14 @@ io.on('connection', (socket) => {
         tiktokConnectionWrapper.connection.on('liveIntro', msg => socket.emit('liveIntro', msg));
         tiktokConnectionWrapper.connection.on('emote', msg => socket.emit('emote', msg));
         tiktokConnectionWrapper.connection.on('envelope', msg => socket.emit('envelope', msg));
+    });
+
+    socket.on('disconnect_tiktok', () => {
+        if (tiktokConnectionWrapper) {
+            tiktokConnectionWrapper.disconnect();
+            tiktokConnectionWrapper = null;
+            socket.emit('tiktokDisconnected', 'Disconnected by user.');
+        }
     });
 
     socket.on('disconnect', () => {
