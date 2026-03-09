@@ -313,12 +313,16 @@ connection.on('gift', (data) => {
     addGiftItem(data);
 })
 
-// share, follow
-connection.on('social', (data) => {
+// follow
+connection.on('follow', (data) => {
     if (window.settings.showFollows === "0") return;
+    addChatItem('#ff005e', data, 'followed');
+})
 
-    let color = data.displayType.includes('follow') ? '#ff005e' : '#2fb816';
-    addChatItem(color, data, data.label.replace('{0:user}', ''));
+// share
+connection.on('share', (data) => {
+    if (window.settings.showFollows === "0") return;
+    addChatItem('#2fb816', data, 'shared');
 })
 
 connection.on('streamEnd', () => {
