@@ -24,6 +24,27 @@ function downloadJSON(data, filename) {
 // These settings are defined by obs.html
 if (!window.settings) window.settings = {};
 
+// Auto-scroll toggles (per container, persisted)
+let autoScrollChat = localStorage.getItem('autoScrollChat') !== 'false';
+let autoScrollGift = localStorage.getItem('autoScrollGift') !== 'false';
+
+function updateAutoScrollButtons() {
+    $('#chatAutoScroll').text(autoScrollChat ? 'Auto-scroll: ON' : 'Auto-scroll: OFF');
+    $('#giftAutoScroll').text(autoScrollGift ? 'Auto-scroll: ON' : 'Auto-scroll: OFF');
+}
+
+function toggleChatAutoScroll() {
+    autoScrollChat = !autoScrollChat;
+    localStorage.setItem('autoScrollChat', autoScrollChat);
+    updateAutoScrollButtons();
+}
+
+function toggleGiftAutoScroll() {
+    autoScrollGift = !autoScrollGift;
+    localStorage.setItem('autoScrollGift', autoScrollGift);
+    updateAutoScrollButtons();
+}
+
 let isConnected = false;
 
 function setButtonState(state) {
@@ -63,6 +84,8 @@ $(document).ready(() => {
         }
     });
 
+    updateAutoScrollButtons();
+
     if (window.settings.username) connect();
 })
 
@@ -70,13 +93,13 @@ function connect() {
     let uniqueId = window.settings.username || $('#uniqueIdInput').val();
     if (uniqueId !== '') {
 
-        $('#stateText').text('Connecting...');
+        $('#stateText').text('');
         setButtonState('connecting');
 
         connection.connect(uniqueId, {
             enableExtendedGiftInfo: true
         }).then(state => {
-            $('#stateText').text(`Connected to roomId ${state.roomId}`);
+            $('#stateText').text('');
             setButtonState('connected');
             localStorage.setItem('lastUsername', uniqueId);
 
@@ -105,7 +128,7 @@ function connect() {
 
 function disconnect() {
     connection.disconnect();
-    $('#stateText').text('Disconnected.');
+    $('#stateText').text('');
     setButtonState('idle');
 }
 
@@ -142,16 +165,18 @@ function addChatItem(color, data, text, summarize) {
         <div class=${summarize ? 'temporary' : 'static'}>
             <img class="miniprofilepicture" src="${data.profilePictureUrl}">
             <span>
-                <b>${generateUsernameLink(data)}:</b> 
+                <b>${generateUsernameLink(data)}:</b>
                 <span style="color:${color}">${sanitize(text)}</span>
             </span>
         </div>
     `);
 
-    container.stop();
-    container.animate({
-        scrollTop: container[0].scrollHeight
-    }, 400);
+    if (autoScrollChat || location.href.includes('obs.html')) {
+        container.stop();
+        container.animate({
+            scrollTop: container[0].scrollHeight
+        }, 400);
+    }
 }
 
 /**
@@ -195,10 +220,12 @@ function addGiftItem(data) {
         container.append(html);
     }
 
-    container.stop();
-    container.animate({
-        scrollTop: container[0].scrollHeight
-    }, 800);
+    if (autoScrollGift || location.href.includes('obs.html')) {
+        container.stop();
+        container.animate({
+            scrollTop: container[0].scrollHeight
+        }, 800);
+    }
 }
 
 
@@ -274,7 +301,8 @@ connection.on('social', (data) => {
 })
 
 connection.on('streamEnd', () => {
-    $('#stateText').text('Stream ended.');
+    $('#stateText').text('Stream ended. Reconnecting...');
+    setButtonState('idle');
 
     // schedule next try if obs username set
     if (window.settings.username) {

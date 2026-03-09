@@ -63,12 +63,12 @@
 <div class="splitchattable">
     <div>
         <div class="chatcontainer">
-            <h3 class="containerheader">Chats <button class="downloadbtn" onclick="downloadJSON(chatHistory, 'chats.json')">Download</button></h3>
+            <h3 class="containerheader"><span>Chats</span><span class="headeractions"><button class="downloadbtn" id="chatAutoScroll" onclick="toggleChatAutoScroll()">Auto-scroll: ON</button><button class="downloadbtn" onclick="downloadJSON(chatHistory, 'chats.json')">Download</button></span></h3>
         </div>
     </div>
     <div>
         <div class="giftcontainer">
-            <h3 class="containerheader">Gifts <button class="downloadbtn" onclick="downloadJSON(giftHistory, 'gifts.json')">Download</button></h3>
+            <h3 class="containerheader"><span>Gifts</span><span class="headeractions"><button class="downloadbtn" id="giftAutoScroll" onclick="toggleGiftAutoScroll()">Auto-scroll: ON</button><button class="downloadbtn" onclick="downloadJSON(giftHistory, 'gifts.json')">Download</button></span></h3>
         </div>
     </div>
 </div>

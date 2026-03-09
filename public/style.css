@@ -181,7 +181,7 @@ a:hover {
 .containerheader {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     font-size: 0.8em;
     text-transform: uppercase;
     letter-spacing: 1.5px;
@@ -196,8 +196,12 @@ a:hover {
     z-index: 1;
 }
 
+.headeractions {
+    display: flex;
+    gap: 6px;
+}
+
 .downloadbtn {
-    margin-left: auto;
     background: var(--bg-subtle);
     border: 1px solid var(--border);
     border-radius: 5px;
