@@ -7,6 +7,20 @@ let viewerCount = 0;
 let likeCount = 0;
 let diamondsCount = 0;
 
+// In-memory storage for downloads
+let chatHistory = [];
+let giftHistory = [];
+
+function downloadJSON(data, filename) {
+    let blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
 // These settings are defined by obs.html
 if (!window.settings) window.settings = {};
 
@@ -188,6 +202,8 @@ connection.on('member', (msg) => {
 
 // New chat comment received
 connection.on('chat', (msg) => {
+    chatHistory.push({ timestamp: Date.now(), uniqueId: msg.uniqueId, comment: msg.comment, userId: msg.userId });
+
     if (window.settings.showChats === "0") return;
 
     addChatItem('', msg, msg.comment);
@@ -195,6 +211,8 @@ connection.on('chat', (msg) => {
 
 // New gift received
 connection.on('gift', (data) => {
+    giftHistory.push({ timestamp: Date.now(), uniqueId: data.uniqueId, userId: data.userId, giftId: data.giftId, giftName: data.giftName, repeatCount: data.repeatCount, diamondCount: data.diamondCount, repeatEnd: data.repeatEnd });
+
     if (!isPendingStreak(data) && data.diamondCount > 0) {
         diamondsCount += (data.diamondCount * data.repeatCount);
         updateRoomStats();

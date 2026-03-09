@@ -50,7 +50,7 @@
 <div class="inputFields">
     <p>Enter the <b>@username</b> of a user who is currently live:</p>
     <input type="text" id="uniqueIdInput">
-    <input type="button" id="connectButton" value="connect">
+    <input type="button" id="connectButton" value="Connect">
     <a href="#" onclick="generateOverlay()">Generate Overlay URL</a>
 </div>
 
@@ -69,12 +69,12 @@
     <tr>
         <td>
             <div class="chatcontainer">
-                <h3 class="containerheader">Chats</h3>
+                <h3 class="containerheader">Chats <button class="downloadbtn" onclick="downloadJSON(chatHistory, 'chats.json')">Download</button></h3>
             </div>
         </td>
         <td>
             <div class="giftcontainer">
-                <h3 class="containerheader">Gifts</h3>
+                <h3 class="containerheader">Gifts <button class="downloadbtn" onclick="downloadJSON(giftHistory, 'gifts.json')">Download</button></h3>
             </div>
         </td>
     </tr>
