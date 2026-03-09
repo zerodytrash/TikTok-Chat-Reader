@@ -7,16 +7,94 @@ let viewerCount = 0;
 let likeCount = 0;
 let diamondsCount = 0;
 
+// In-memory storage for downloads
+let chatHistory = [];
+let giftHistory = [];
+
+function downloadJSON(data, filename) {
+    let blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
 // These settings are defined by obs.html
 if (!window.settings) window.settings = {};
 
+// Auto-scroll toggles (per container, persisted)
+let autoScrollChat = localStorage.getItem('autoScrollChat') !== 'false';
+let autoScrollGift = localStorage.getItem('autoScrollGift') !== 'false';
+
+function updateAutoScrollButtons() {
+    $('#chatAutoScroll').text(autoScrollChat ? 'Auto-scroll: ON' : 'Auto-scroll: OFF');
+    $('#giftAutoScroll').text(autoScrollGift ? 'Auto-scroll: ON' : 'Auto-scroll: OFF');
+}
+
+function toggleChatAutoScroll() {
+    autoScrollChat = !autoScrollChat;
+    localStorage.setItem('autoScrollChat', autoScrollChat);
+    updateAutoScrollButtons();
+}
+
+function toggleGiftAutoScroll() {
+    autoScrollGift = !autoScrollGift;
+    localStorage.setItem('autoScrollGift', autoScrollGift);
+    updateAutoScrollButtons();
+}
+
+let isConnected = false;
+
+function setButtonState(state) {
+    const $connect = $('#connectButton');
+    const $disconnect = $('#disconnectButton');
+    const $input = $('#uniqueIdInput');
+
+    if (state === 'connecting') {
+        $connect.val('Connecting...').prop('disabled', true);
+        $disconnect.hide();
+        $input.prop('disabled', true);
+    } else if (state === 'connected') {
+        isConnected = true;
+        $connect.hide();
+        $disconnect.show();
+        $input.prop('disabled', true);
+    } else {
+        isConnected = false;
+        $connect.val('Connect').prop('disabled', false).show();
+        $disconnect.hide();
+        $input.prop('disabled', false);
+    }
+}
+
 $(document).ready(() => {
-    $('#connectButton').click(connect);
-    $('#uniqueIdInput').on('keyup', function (e) {
-        if (e.key === 'Enter') {
+    // Pre-fill last connected username
+    const lastUser = localStorage.getItem('lastUsername');
+    if (lastUser && !window.settings.username) {
+        $('#uniqueIdInput').val(lastUser);
+    }
+
+    $('#connectButton').click(() => {
+        if (typeof connectWithCaptcha === 'function') {
+            connectWithCaptcha();
+        } else {
             connect();
         }
     });
+    $('#disconnectButton').click(disconnect);
+    $('#uniqueIdInput').on('keyup', function (e) {
+        if (e.key === 'Enter') {
+            if (typeof connectWithCaptcha === 'function') {
+                connectWithCaptcha();
+            } else {
+                connect();
+            }
+        }
+    });
+
+    updateAutoScrollButtons();
 
     if (window.settings.username) connect();
 })
@@ -25,12 +103,26 @@ function connect() {
     let uniqueId = window.settings.username || $('#uniqueIdInput').val();
     if (uniqueId !== '') {
 
-        $('#stateText').text('Connecting...');
+        $('#stateText').text('');
+        setButtonState('connecting');
 
-        connection.connect(uniqueId, {
-            enableExtendedGiftInfo: true
-        }).then(state => {
-            $('#stateText').text(`Connected to roomId ${state.roomId}`);
+        let options = {};
+
+        // Attach reCAPTCHA token from captcha popup (index.html)
+        if (window._pendingRecaptchaToken) {
+            options.recaptchaToken = window._pendingRecaptchaToken;
+            window._pendingRecaptchaToken = null;
+        }
+
+        // Attach bypass token from URL (obs.html)
+        if (window.settings && window.settings.token) {
+            options.bypassToken = window.settings.token;
+        }
+
+        connection.connect(uniqueId, options).then(state => {
+            $('#stateText').text('');
+            setButtonState('connected');
+            localStorage.setItem('lastUsername', uniqueId);
 
             // reset stats
             viewerCount = 0;
@@ -40,6 +132,7 @@ function connect() {
 
         }).catch(errorMessage => {
             $('#stateText').text(errorMessage);
+            setButtonState('idle');
 
             // schedule next try if obs username set
             if (window.settings.username) {
@@ -52,6 +145,12 @@ function connect() {
     } else {
         alert('no username entered');
     }
+}
+
+function disconnect() {
+    connection.disconnect();
+    $('#stateText').text('');
+    setButtonState('idle');
 }
 
 // Prevent Cross site scripting (XSS)
@@ -81,22 +180,25 @@ function addChatItem(color, data, text, summarize) {
         container.find('div').slice(0, 200).remove();
     }
 
-    container.find('.temporary').remove();;
+    container.find('.temporary').remove();
+    ;
 
     container.append(`
         <div class=${summarize ? 'temporary' : 'static'}>
             <img class="miniprofilepicture" src="${data.profilePictureUrl}">
             <span>
-                <b>${generateUsernameLink(data)}:</b> 
+                <b>${generateUsernameLink(data)}:</b>
                 <span style="color:${color}">${sanitize(text)}</span>
             </span>
         </div>
     `);
 
-    container.stop();
-    container.animate({
-        scrollTop: container[0].scrollHeight
-    }, 400);
+    if (autoScrollChat || location.href.includes('obs.html')) {
+        container.stop();
+        container.animate({
+            scrollTop: container[0].scrollHeight
+        }, 400);
+    }
 }
 
 /**
@@ -140,10 +242,12 @@ function addGiftItem(data) {
         container.append(html);
     }
 
-    container.stop();
-    container.animate({
-        scrollTop: container[0].scrollHeight
-    }, 800);
+    if (autoScrollGift || location.href.includes('obs.html')) {
+        container.stop();
+        container.animate({
+            scrollTop: container[0].scrollHeight
+        }, 800);
+    }
 }
 
 
@@ -165,7 +269,8 @@ connection.on('like', (msg) => {
     if (window.settings.showLikes === "0") return;
 
     if (typeof msg.likeCount === 'number') {
-        addChatItem('#447dd4', msg, msg.label.replace('{0:user}', '').replace('likes', `${msg.likeCount} likes`))
+        let likeLabel = msg.label ? msg.label.replace('{0:user}', '').replace('likes', `${msg.likeCount} likes`) : `${msg.likeCount} likes`;
+        addChatItem('#447dd4', msg, likeLabel)
     }
 })
 
@@ -188,6 +293,8 @@ connection.on('member', (msg) => {
 
 // New chat comment received
 connection.on('chat', (msg) => {
+    chatHistory.push({timestamp: Date.now(), uniqueId: msg.uniqueId, comment: msg.comment, userId: msg.userId});
+
     if (window.settings.showChats === "0") return;
 
     addChatItem('', msg, msg.comment);
@@ -195,6 +302,17 @@ connection.on('chat', (msg) => {
 
 // New gift received
 connection.on('gift', (data) => {
+    giftHistory.push({
+        timestamp: Date.now(),
+        uniqueId: data.uniqueId,
+        userId: data.userId,
+        giftId: data.giftId,
+        giftName: data.giftName,
+        repeatCount: data.repeatCount,
+        diamondCount: data.diamondCount,
+        repeatEnd: data.repeatEnd
+    });
+
     if (!isPendingStreak(data) && data.diamondCount > 0) {
         diamondsCount += (data.diamondCount * data.repeatCount);
         updateRoomStats();
@@ -205,16 +323,21 @@ connection.on('gift', (data) => {
     addGiftItem(data);
 })
 
-// share, follow
-connection.on('social', (data) => {
+// follow
+connection.on('follow', (data) => {
     if (window.settings.showFollows === "0") return;
+    addChatItem('#ff005e', data, 'followed');
+})
 
-    let color = data.displayType.includes('follow') ? '#ff005e' : '#2fb816';
-    addChatItem(color, data, data.label.replace('{0:user}', ''));
+// share
+connection.on('share', (data) => {
+    if (window.settings.showFollows === "0") return;
+    addChatItem('#2fb816', data, 'shared');
 })
 
 connection.on('streamEnd', () => {
-    $('#stateText').text('Stream ended.');
+    $('#stateText').text('Stream ended. Reconnecting...');
+    setButtonState('idle');
 
     // schedule next try if obs username set
     if (window.settings.username) {

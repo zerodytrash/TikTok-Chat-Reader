@@ -27,9 +27,9 @@ class TikTokConnectionWrapper extends EventEmitter {
             this.reconnectEnabled = false;
         })
 
-        this.connection.on('disconnected', () => {
+        this.connection.on('disconnected', ({ code, reason }) => {
             globalConnectionCount -= 1;
-            this.log(`TikTok connection disconnected`);
+            this.log(`TikTok connection disconnected (code: ${code}, reason: ${reason})`);
             this.scheduleReconnect();
         });
 
@@ -41,7 +41,7 @@ class TikTokConnectionWrapper extends EventEmitter {
 
     connect(isReconnect) {
         this.connection.connect().then((state) => {
-            this.log(`${isReconnect ? 'Reconnected' : 'Connected'} to roomId ${state.roomId}, websocket: ${state.upgradedToWebsocket}`);
+            this.log(`${isReconnect ? 'Reconnected' : 'Connected'} to roomId ${state.roomId}`);
 
             globalConnectionCount += 1;
 
@@ -63,12 +63,25 @@ class TikTokConnectionWrapper extends EventEmitter {
         }).catch((err) => {
             this.log(`${isReconnect ? 'Reconnect' : 'Connection'} failed, ${err}`);
 
+            let errorMessage = err.message || err.toString();
+
+            // Extract detailed sub-errors if available (e.g. FetchIsLiveError)
+            if (Array.isArray(err.errors) && err.errors.length > 0) {
+                const details = err.errors
+                    .map(e => e.message || e.toString())
+                    .filter(Boolean)
+                    .join(' | ');
+                if (details) {
+                    errorMessage += ': ' + details;
+                }
+            }
+
             if (isReconnect) {
                 // Schedule the next reconnect attempt
-                this.scheduleReconnect(err);
+                this.scheduleReconnect(errorMessage);
             } else {
                 // Notify client
-                this.emit('disconnected', err.toString());
+                this.emit('disconnected', errorMessage);
             }
         })
     }
@@ -105,7 +118,7 @@ class TikTokConnectionWrapper extends EventEmitter {
         this.clientDisconnected = true;
         this.reconnectEnabled = false;
 
-        if (this.connection.getState().isConnected) {
+        if (this.connection.isConnected) {
             this.connection.disconnect();
         }
     }
